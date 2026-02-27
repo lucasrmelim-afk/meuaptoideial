@@ -78,7 +78,7 @@
             <div class="flex justify-between md:justify-start h-16">
                 <div class="flex items-center cursor-pointer md:mr-8" onclick="app.navigate('list')">
                     <i class="fa-solid fa-building text-2xl mr-2 text-brand-200"></i>
-                    <span class="font-bold text-xl tracking-tight">Lucas & Kaillany</span>
+                    <span class="font-bold text-xl tracking-tight">Meu Apto Ideal</span>
                 </div>
                 
                 <!-- Desktop Menu -->
@@ -304,64 +304,49 @@
                         <h1 class="text-2xl md:text-3xl font-bold text-slate-800">
                             ${onlyFavorites ? '<i class="fa-solid fa-heart text-red-500 mr-2"></i> Meus Favoritos' : 'Todos os Apartamentos'}
                         </h1>
-                        <div class="flex flex-wrap gap-2 items-center w-full md:w-auto">
-                            <span class="text-slate-500 text-sm hidden md:inline">Ordenar por:</span>
-                            <select id="sort-select" onchange="app.handleSort(this.value)" class="w-full md:w-auto bg-white border border-slate-300 text-slate-700 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2.5 outline-none shadow-sm cursor-pointer">
-                                <option value="dateDesc" ${this.state.sortBy === 'dateDesc' ? 'selected' : ''}>Mais recentes</option>
-                                <option value="priceAsc" ${this.state.sortBy === 'priceAsc' ? 'selected' : ''}>Menor Preço</option>
-                                <option value="priceDesc" ${this.state.sortBy === 'priceDesc' ? 'selected' : ''}>Maior Preço</option>
-                                <option value="priceM2Asc" ${this.state.sortBy === 'priceM2Asc' ? 'selected' : ''}>Melhor Preço/m²</option>
-                                <option value="areaDesc" ${this.state.sortBy === 'areaDesc' ? 'selected' : ''}>Maior Área</option>
-                                <option value="ratingDesc" ${this.state.sortBy === 'ratingDesc' ? 'selected' : ''}>Melhor Avaliado (Média)</option>
-                            </select>
-                        </div>
                     </div>
 
                     <div class="flex flex-col lg:flex-row gap-6">
-                        <!-- Filters Sidebar (Collapsible on Mobile) -->
+                        <!-- Filters Sidebar -->
                         ${!onlyFavorites ? `
-                        <aside class="w-full lg:w-1/4 bg-white rounded-xl border border-slate-200 shadow-sm h-fit">
-                            <!-- Filter Header / Toggle Mobile -->
-                            <div class="p-5 flex justify-between items-center cursor-pointer lg:cursor-default lg:border-none border-b border-slate-100" 
-                                 onclick="document.getElementById('filter-content').classList.toggle('hidden'); document.getElementById('filter-chevron').classList.toggle('rotate-180');">
-                                <h2 class="font-bold text-lg flex items-center"><i class="fa-solid fa-filter mr-2 text-brand-600"></i> Filtros</h2>
-                                <i id="filter-chevron" class="fa-solid fa-chevron-down lg:hidden text-slate-400 transition-transform duration-300"></i>
-                            </div>
+                        <aside class="w-full lg:w-1/4 bg-white rounded-xl border border-slate-200 shadow-sm h-fit p-4 md:p-5">
+                            <h2 class="font-bold text-lg flex items-center mb-4"><i class="fa-solid fa-filter mr-2 text-brand-600"></i> Filtros</h2>
                             
-                            <!-- Filter Content -->
-                            <div id="filter-content" class="hidden lg:block p-5 pt-0 lg:pt-5 transition-all">
-                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 mt-4 lg:mt-0">
-                                    <div class="sm:col-span-2 lg:col-span-1">
-                                        <label class="block text-sm font-medium text-slate-700 mb-1">Buscar por nome</label>
-                                        <div class="relative">
-                                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                                <i class="fa-solid fa-search text-slate-400"></i>
-                                            </div>
-                                            <input type="text" id="filter-title" value="${this.state.filters.searchTitle || ''}" placeholder="Palavra chave..." class="pl-10 w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2 outline-none transition">
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-700 mb-1">Buscar por nome</label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                            <i class="fa-solid fa-search text-slate-400 text-sm"></i>
                                         </div>
+                                        <input type="text" id="filter-title" value="${this.state.filters.searchTitle || ''}" placeholder="Palavra chave..." class="pl-9 w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2 outline-none transition">
                                     </div>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-3">
                                     <div>
-                                        <label class="block text-sm font-medium text-slate-700 mb-1">Bairro</label>
-                                        <select id="filter-neighborhood" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2 outline-none transition cursor-pointer">
-                                            <option value="">Todos os Bairros</option>
+                                        <label class="block text-xs font-medium text-slate-700 mb-1">Bairro</label>
+                                        <select id="filter-neighborhood" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2 outline-none transition cursor-pointer">
+                                            <option value="">Todos</option>
                                             ${uniqueNeighborhoods.map(n => `<option value="${n}" ${this.state.filters.neighborhood === n ? 'selected' : ''}>${n}</option>`).join('')}
                                         </select>
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-slate-700 mb-1">Nome do Edifício</label>
-                                        <select id="filter-building" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2 outline-none transition cursor-pointer">
-                                            <option value="">Todos os Edifícios</option>
+                                        <label class="block text-xs font-medium text-slate-700 mb-1">Edifício</label>
+                                        <select id="filter-building" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2 outline-none transition cursor-pointer">
+                                            <option value="">Todos</option>
                                             ${uniqueBuildings.map(b => `<option value="${b}" ${this.state.filters.building === b ? 'selected' : ''}>${b}</option>`).join('')}
                                         </select>
                                     </div>
-                                    <div class="sm:col-span-2 lg:col-span-1 pt-2 space-y-2 lg:space-y-0 lg:flex lg:flex-col gap-2">
-                                        <button onclick="app.applyFilters()" class="w-full text-white bg-brand-600 hover:bg-brand-700 focus:ring-4 focus:ring-brand-300 font-medium rounded-lg text-sm px-5 py-3 md:py-2.5 text-center transition shadow-sm">
-                                            Aplicar Filtros
-                                        </button>
-                                        <button onclick="app.clearFilters()" class="w-full text-brand-700 bg-brand-50 hover:bg-brand-100 border border-brand-200 font-medium rounded-lg text-sm px-5 py-3 md:py-2.5 text-center transition">
-                                            Limpar
-                                        </button>
-                                    </div>
+                                </div>
+
+                                <div class="flex gap-2 pt-1">
+                                    <button onclick="app.applyFilters()" class="flex-1 flex justify-center items-center text-white bg-brand-600 hover:bg-brand-700 focus:ring-4 focus:ring-brand-300 font-medium rounded-lg text-sm px-3 py-2.5 transition shadow-sm">
+                                        <i class="fa-solid fa-check mr-1.5"></i> Filtrar
+                                    </button>
+                                    <button onclick="app.clearFilters()" class="flex-1 flex justify-center items-center text-brand-700 bg-brand-50 hover:bg-brand-100 border border-brand-200 font-medium rounded-lg text-sm px-3 py-2.5 transition">
+                                        <i class="fa-solid fa-eraser mr-1.5"></i> Limpar
+                                    </button>
                                 </div>
                             </div>
                         </aside>
@@ -520,82 +505,82 @@
 
                 document.getElementById('modal-content-inject').innerHTML = `
                     <!-- Header c/ Imagem -->
-                    <div class="h-64 md:h-80 w-full relative bg-slate-200 shrink-0">
+                    <div class="h-48 md:h-64 w-full relative bg-slate-200 shrink-0">
                         <img src="${apt.photo || 'https://via.placeholder.com/800x600?text=Sem+Foto'}" class="w-full h-full object-cover" alt="Foto">
-                        <button onclick="app.closeModal(event)" class="absolute top-4 right-4 bg-white/90 backdrop-blur w-10 h-10 rounded-full flex items-center justify-center text-slate-800 hover:bg-white shadow-lg transition z-10">
-                            <i class="fa-solid fa-xmark text-xl"></i>
+                        <button onclick="app.closeModal(event)" class="absolute top-4 right-4 bg-white/90 backdrop-blur w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center text-slate-800 hover:bg-white shadow-lg transition z-10">
+                            <i class="fa-solid fa-xmark text-lg md:text-xl"></i>
                         </button>
                         <div class="absolute bottom-4 left-4 right-4 flex flex-col md:flex-row gap-2 items-start md:items-end pointer-events-none">
-                            <div class="bg-brand-600 text-white px-4 py-2 rounded-lg font-bold shadow-lg text-lg border border-white/20 pointer-events-auto max-w-full overflow-hidden text-ellipsis whitespace-nowrap">
+                            <div class="bg-brand-600 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-bold shadow-lg text-base md:text-lg border border-white/20 pointer-events-auto max-w-full overflow-hidden text-ellipsis whitespace-nowrap">
                                 ${this.formatCurrency(apt.price)}
                             </div>
-                            <div class="bg-white/95 backdrop-blur text-slate-800 px-3 py-1.5 md:py-2 rounded-lg font-bold shadow-lg text-sm border border-slate-200 pointer-events-auto whitespace-nowrap">
+                            <div class="bg-white/95 backdrop-blur text-slate-800 px-2 py-1 md:px-3 md:py-1.5 rounded-lg font-bold shadow-lg text-xs md:text-sm border border-slate-200 pointer-events-auto whitespace-nowrap">
                                 ${this.formatCurrency(apt.priceM2).replace(',00', '')}/m²
                             </div>
                         </div>
                     </div>
 
                     <!-- Conteúdo Interno -->
-                    <div class="p-6 md:p-8 flex-grow">
+                    <div class="p-4 md:p-6 flex-grow">
                         <div class="flex justify-between items-start mb-2">
-                            <h2 class="text-xl md:text-2xl font-bold text-slate-800 leading-tight">${apt.title}</h2>
+                            <h2 class="text-lg md:text-xl font-bold text-slate-800 leading-tight">${apt.title}</h2>
                         </div>
                         
-                        ${apt.building ? `<p class="text-brand-700 font-semibold mb-2"><i class="fa-regular fa-building mr-1"></i> Edifício: ${apt.building}</p>` : ''}
-                        <p class="text-slate-500 mb-6 text-sm md:text-base"><i class="fa-solid fa-location-dot mr-1 text-slate-400"></i> ${apt.address ? apt.address + ' - ' : ''}${apt.neighborhood}, ${apt.city}</p>
+                        ${apt.building ? `<p class="text-brand-700 font-semibold mb-2 text-sm"><i class="fa-regular fa-building mr-1"></i> Edifício: ${apt.building}</p>` : ''}
+                        <p class="text-slate-500 mb-5 text-xs md:text-sm"><i class="fa-solid fa-location-dot mr-1 text-slate-400"></i> ${apt.address ? apt.address + ' - ' : ''}${apt.neighborhood}, ${apt.city}</p>
 
                         <!-- Grid Principal de Dados -->
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4 mb-8">
-                            <div class="bg-slate-50 p-3 md:p-4 rounded-xl border border-slate-100 flex flex-col items-center justify-center">
-                                <p class="text-[10px] md:text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Área Útil</p>
-                                <p class="font-bold text-slate-800 text-base md:text-lg"><i class="fa-solid fa-ruler-combined text-brand-500 mr-1.5 opacity-70"></i>${apt.area} m²</p>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 md:gap-3 mb-6">
+                            <div class="bg-slate-50 p-2 md:p-3 rounded-xl border border-slate-100 flex flex-col items-center justify-center">
+                                <p class="text-[9px] md:text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">Área Útil</p>
+                                <p class="font-bold text-slate-800 text-sm md:text-base"><i class="fa-solid fa-ruler-combined text-brand-500 mr-1.5 opacity-70"></i>${apt.area} m²</p>
                             </div>
-                            <div class="bg-slate-50 p-3 md:p-4 rounded-xl border border-slate-100 flex flex-col items-center justify-center">
-                                <p class="text-[10px] md:text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Quartos</p>
-                                <p class="font-bold text-slate-800 text-base md:text-lg"><i class="fa-solid fa-bed text-brand-500 mr-1.5 opacity-70"></i>${apt.bedrooms}</p>
+                            <div class="bg-slate-50 p-2 md:p-3 rounded-xl border border-slate-100 flex flex-col items-center justify-center">
+                                <p class="text-[9px] md:text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">Quartos</p>
+                                <p class="font-bold text-slate-800 text-sm md:text-base"><i class="fa-solid fa-bed text-brand-500 mr-1.5 opacity-70"></i>${apt.bedrooms}</p>
                             </div>
-                            <div class="bg-slate-50 p-3 md:p-4 rounded-xl border border-slate-100 flex flex-col items-center justify-center">
-                                <p class="text-[10px] md:text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Condomínio</p>
-                                <p class="font-bold text-slate-800 text-sm md:text-base">${this.formatCurrency(apt.condo)}</p>
+                            <div class="bg-slate-50 p-2 md:p-3 rounded-xl border border-slate-100 flex flex-col items-center justify-center">
+                                <p class="text-[9px] md:text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">Condomínio</p>
+                                <p class="font-bold text-slate-800 text-xs md:text-sm">${this.formatCurrency(apt.condo)}</p>
                             </div>
-                            <div class="bg-slate-50 p-3 md:p-4 rounded-xl border border-slate-100 flex flex-col items-center justify-center">
-                                <p class="text-[10px] md:text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">IPTU/Ano</p>
-                                <p class="font-bold text-slate-800 text-sm md:text-base">${this.formatCurrency(apt.iptu)}</p>
+                            <div class="bg-slate-50 p-2 md:p-3 rounded-xl border border-slate-100 flex flex-col items-center justify-center">
+                                <p class="text-[9px] md:text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">IPTU/Ano</p>
+                                <p class="font-bold text-slate-800 text-xs md:text-sm">${this.formatCurrency(apt.iptu)}</p>
                             </div>
                         </div>
 
                         <!-- Avaliações Pessoais -->
-                        <div class="mb-8">
-                            <h3 class="font-bold text-slate-800 mb-3 border-b border-slate-100 pb-2 flex items-center">
-                                <i class="fa-solid fa-star-half-stroke text-amber-500 mr-2"></i> Notas Pessoais (Média: ${avgRating})
+                        <div class="mb-6">
+                            <h3 class="font-bold text-slate-800 text-sm md:text-base mb-2 border-b border-slate-100 pb-1.5 flex items-center">
+                                <i class="fa-solid fa-star-half-stroke text-amber-500 mr-1.5"></i> Notas Pessoais (Média: ${avgRating})
                             </h3>
-                            <div class="flex flex-col sm:flex-row gap-3 sm:gap-6 text-sm text-slate-600">
-                                <div class="flex items-center bg-white border border-slate-100 px-3 py-2 rounded-lg shadow-sm">
-                                    <span class="w-20 font-medium"><i class="fa-solid fa-sack-dollar mr-1 text-slate-400"></i> Preço:</span> 
-                                    <div class="ml-auto">${this.renderStars(apt.ratingPrice)}</div>
+                            <div class="flex flex-col sm:flex-row gap-2 sm:gap-4 text-xs md:text-sm text-slate-600">
+                                <div class="flex items-center bg-white border border-slate-100 px-2 py-1.5 md:px-3 md:py-2 rounded-lg shadow-sm flex-1 justify-between">
+                                    <span class="font-medium"><i class="fa-solid fa-sack-dollar mr-1 text-slate-400"></i> Preço:</span> 
+                                    <div>${this.renderStars(apt.ratingPrice)}</div>
                                 </div>
-                                <div class="flex items-center bg-white border border-slate-100 px-3 py-2 rounded-lg shadow-sm">
-                                    <span class="w-20 font-medium"><i class="fa-solid fa-map-pin mr-1 text-slate-400"></i> Local:</span> 
-                                    <div class="ml-auto">${this.renderStars(apt.ratingLocation)}</div>
+                                <div class="flex items-center bg-white border border-slate-100 px-2 py-1.5 md:px-3 md:py-2 rounded-lg shadow-sm flex-1 justify-between">
+                                    <span class="font-medium"><i class="fa-solid fa-map-pin mr-1 text-slate-400"></i> Local:</span> 
+                                    <div>${this.renderStars(apt.ratingLocation)}</div>
                                 </div>
-                                <div class="flex items-center bg-white border border-slate-100 px-3 py-2 rounded-lg shadow-sm">
-                                    <span class="w-20 font-medium"><i class="fa-solid fa-couch mr-1 text-slate-400"></i> Decor:</span> 
-                                    <div class="ml-auto">${this.renderStars(apt.ratingDeco)}</div>
+                                <div class="flex items-center bg-white border border-slate-100 px-2 py-1.5 md:px-3 md:py-2 rounded-lg shadow-sm flex-1 justify-between">
+                                    <span class="font-medium"><i class="fa-solid fa-couch mr-1 text-slate-400"></i> Decor:</span> 
+                                    <div>${this.renderStars(apt.ratingDeco)}</div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Observações do Anúncio -->
-                        <div class="mb-8">
-                            <h3 class="font-bold text-slate-800 mb-3 border-b border-slate-100 pb-2"><i class="fa-solid fa-clipboard-list text-brand-500 mr-2"></i> Observações</h3>
-                            <div class="bg-amber-50/50 p-4 rounded-xl border border-amber-100">
-                                <p class="text-slate-700 text-sm leading-relaxed whitespace-pre-line">${apt.notes || 'Nenhuma observação informada.'}</p>
+                        <div class="mb-6">
+                            <h3 class="font-bold text-slate-800 text-sm md:text-base mb-2 border-b border-slate-100 pb-1.5"><i class="fa-solid fa-clipboard-list text-brand-500 mr-1.5"></i> Observações</h3>
+                            <div class="bg-amber-50/50 p-3 rounded-xl border border-amber-100">
+                                <p class="text-slate-700 text-xs md:text-sm leading-relaxed whitespace-pre-line">${apt.notes || 'Nenhuma observação informada.'}</p>
                             </div>
                         </div>
 
                         <!-- Footer do Modal (Ações) -->
-                        <div class="flex flex-col gap-3 pt-4 border-t border-slate-100">
-                            <a href="${apt.link}" target="_blank" class="w-full text-center bg-brand-600 hover:bg-brand-700 text-white font-bold py-4 rounded-xl shadow-md transition-colors text-base md:text-lg flex items-center justify-center">
+                        <div class="flex flex-col gap-2 pt-3 border-t border-slate-100">
+                            <a href="${apt.link}" target="_blank" class="w-full text-center bg-brand-600 hover:bg-brand-700 text-white font-bold py-2.5 md:py-3 rounded-xl shadow-md transition-colors text-sm md:text-base flex items-center justify-center">
                                 Ir para o Anúncio Original <i class="fa-solid fa-arrow-up-right-from-square ml-2"></i>
                             </a>
                         </div>
@@ -906,37 +891,72 @@
                         attribution: '&copy; OpenStreetMap contributors'
                     }).addTo(this.state.mapInstance);
 
-                    const icon = L.divIcon({
-                        className: 'custom-div-icon',
-                        html: `<div class="bg-brand-600 text-white w-8 h-8 flex items-center justify-center rounded-full shadow-lg border-2 border-white"><i class="fa-solid fa-house text-sm"></i></div>`,
-                        iconSize: [32, 32],
-                        iconAnchor: [16, 32],
-                        popupAnchor: [0, -32]
-                    });
-
                     let bounds = [];
+                    const locationMap = {};
+
+                    // Agrupa apartamentos que têm coordenadas (lat/lng) idênticas ou muito próximas (4 casas decimais = ~11 metros)
                     this.state.apartments.forEach(apt => {
                         if (apt.lat && apt.lng) {
-                            const marker = L.marker([apt.lat, apt.lng], {icon: icon}).addTo(this.state.mapInstance);
-                            
-                            const avgRating = ((parseInt(apt.ratingPrice||3) + parseInt(apt.ratingLocation||3) + parseInt(apt.ratingDeco||3))/3).toFixed(1);
-
-                            const popupContent = `
-                                <div class="w-48 font-sans">
-                                    <img src="${apt.photo || 'https://via.placeholder.com/200x150'}" class="w-full h-24 object-cover rounded mb-2">
-                                    <div class="flex justify-between items-start mb-1">
-                                        <h4 class="font-bold text-sm text-slate-800 leading-tight">${apt.title}</h4>
-                                    </div>
-                                    <p class="text-brand-600 font-bold mb-1">${this.formatCurrency(apt.price)}</p>
-                                    <div class="text-[10px] text-amber-500 mb-2"><i class="fa-solid fa-star"></i> Média: ${avgRating}/5</div>
-                                    <p class="text-xs text-slate-500 mb-2 border-t border-slate-100 pt-2"><i class="fa-solid fa-bed"></i> ${apt.bedrooms} | <i class="fa-solid fa-ruler"></i> ${apt.area}m²</p>
-                                    <a href="${apt.link}" target="_blank" class="block w-full text-center bg-brand-500 active:bg-brand-600 md:hover:bg-brand-600 text-white text-xs py-2 md:py-1.5 rounded transition">Ver Anúncio</a>
-                                </div>
-                            `;
-                            marker.bindPopup(popupContent);
-                            bounds.push([apt.lat, apt.lng]);
+                            const key = `${parseFloat(apt.lat).toFixed(4)},${parseFloat(apt.lng).toFixed(4)}`;
+                            if (!locationMap[key]) locationMap[key] = [];
+                            locationMap[key].push(apt);
                         }
                     });
+
+                    // Cria os marcadores (simples ou agrupados)
+                    for (const key in locationMap) {
+                        const apts = locationMap[key];
+                        const [latStr, lngStr] = key.split(',');
+                        const lat = parseFloat(latStr);
+                        const lng = parseFloat(lngStr);
+
+                        // Icone Dinâmico
+                        let iconHtml = `<div class="bg-brand-600 text-white w-8 h-8 flex items-center justify-center rounded-full shadow-lg border-2 border-white"><i class="fa-solid fa-house text-sm"></i></div>`;
+                        
+                        if (apts.length > 1) {
+                            // Se houver mais de um, vira um ícone de prédio com a contagem (badge)
+                            iconHtml = `
+                            <div class="relative bg-brand-700 text-white w-9 h-9 flex items-center justify-center rounded-full shadow-lg border-2 border-white">
+                                <i class="fa-solid fa-building text-sm"></i>
+                                <div class="absolute -top-2 -right-2 bg-amber-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border border-white shadow-sm">${apts.length}</div>
+                            </div>`;
+                        }
+
+                        const icon = L.divIcon({
+                            className: 'custom-div-icon',
+                            html: iconHtml,
+                            iconSize: [apts.length > 1 ? 36 : 32, apts.length > 1 ? 36 : 32],
+                            iconAnchor: [apts.length > 1 ? 18 : 16, apts.length > 1 ? 36 : 32],
+                            popupAnchor: [0, apts.length > 1 ? -36 : -32]
+                        });
+
+                        // Popup Dinâmico
+                        let popupContent = `<div class="w-48 md:w-56 font-sans max-h-64 overflow-y-auto custom-scrollbar pr-1">`;
+                        if (apts.length > 1) {
+                            popupContent += `<h4 class="font-bold text-sm text-slate-800 mb-2 pb-1 border-b border-slate-200"><i class="fa-solid fa-layer-group text-brand-500 mr-1"></i> ${apts.length} Imóveis neste local</h4>`;
+                        }
+                        
+                        apts.forEach((apt, index) => {
+                            const avgRating = ((parseInt(apt.ratingPrice||3) + parseInt(apt.ratingLocation||3) + parseInt(apt.ratingDeco||3))/3).toFixed(1);
+                            popupContent += `
+                                <div class="${index > 0 ? 'mt-3 pt-3 border-t border-slate-100' : ''}">
+                                    <img src="${apt.photo || 'https://via.placeholder.com/200x150'}" class="w-full h-20 object-cover rounded mb-2 cursor-pointer hover:opacity-90 transition" onclick="app.viewApt('${apt.id}')">
+                                    <h4 class="font-bold text-[11px] text-slate-800 leading-tight mb-1 truncate cursor-pointer hover:text-brand-600 transition" onclick="app.viewApt('${apt.id}')" title="${apt.title}">${apt.title}</h4>
+                                    <div class="flex justify-between items-center mb-1">
+                                        <p class="text-brand-600 font-bold text-xs">${this.formatCurrency(apt.price)}</p>
+                                        <div class="text-[9px] text-amber-500"><i class="fa-solid fa-star"></i> ${avgRating}</div>
+                                    </div>
+                                    <p class="text-[10px] text-slate-500 mb-2"><i class="fa-solid fa-bed"></i> ${apt.bedrooms} | <i class="fa-solid fa-ruler"></i> ${apt.area}m²</p>
+                                    <button onclick="app.viewApt('${apt.id}')" class="block w-full text-center bg-brand-50 hover:bg-brand-100 text-brand-700 text-[10px] font-bold py-1.5 rounded transition shadow-sm border border-brand-100">Ver Detalhes</button>
+                                </div>
+                            `;
+                        });
+                        popupContent += `</div>`;
+
+                        const marker = L.marker([lat, lng], {icon: icon}).addTo(this.state.mapInstance);
+                        marker.bindPopup(popupContent);
+                        bounds.push([lat, lng]);
+                    }
 
                     if (bounds.length > 0) {
                         this.state.mapInstance.fitBounds(bounds, {padding: [50, 50]});
@@ -982,12 +1002,12 @@
                     </div>
 
                     <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto custom-scrollbar">
-                        <table class="w-full text-left border-collapse">
+                        <table class="w-full text-left border-collapse table-fixed" style="min-width: ${120 + (apts.length * 280)}px;">
                             <thead>
                                 <tr>
-                                    <th class="p-3 md:p-4 border-b border-r border-slate-200 bg-slate-50 min-w-[120px] md:min-w-[150px] sticky left-0 z-10 shadow-[1px_0_0_0_#e2e8f0]">Atributo</th>
+                                    <th class="p-3 md:p-4 border-b border-r border-slate-200 bg-slate-50 w-[120px] md:w-[150px] sticky left-0 z-10 shadow-[1px_0_0_0_#e2e8f0]">Atributo</th>
                                     ${apts.map(a => `
-                                        <th class="p-3 md:p-4 border-b border-slate-200 min-w-[240px] md:min-w-[280px] bg-white align-top">
+                                        <th class="p-3 md:p-4 border-b border-slate-200 bg-white align-top">
                                             <div class="relative">
                                                 <button onclick="app.toggleCompare('${a.id}'); app.renderCompare(document.getElementById('main-content'));" class="absolute -top-2 -right-2 w-8 h-8 md:w-6 md:h-6 bg-red-100 text-red-500 rounded-full flex items-center justify-center md:hover:bg-red-500 active:bg-red-500 active:text-white md:hover:text-white transition shadow-sm" title="Remover">
                                                     <i class="fa-solid fa-xmark text-sm md:text-xs"></i>
@@ -1178,11 +1198,6 @@
                     building: document.getElementById('filter-building').value,
                 };
                 this.renderList(document.getElementById('main-content'), false);
-                // Fecha filtro mobile após aplicar
-                if (window.innerWidth < 1024) {
-                    document.getElementById('filter-content').classList.add('hidden');
-                    document.getElementById('filter-chevron').classList.remove('rotate-180');
-                }
             },
 
             clearFilters() {
