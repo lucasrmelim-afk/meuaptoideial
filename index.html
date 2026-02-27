@@ -2,7 +2,8 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bloqueio de zoom para melhorar a experiência no mobile (parecer mais com app nativo) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Meu Apto Ideal</title>
     
     <!-- Tailwind CSS -->
@@ -45,23 +46,37 @@
     <style>
         /* Estilos adicionais para mapa e scrollbar */
         #map { height: 600px; width: 100%; z-index: 10; border-radius: 0.5rem; }
+        @media (max-width: 768px) {
+            #map { height: 450px; } /* Mapa um pouco menor no mobile para não prender o scroll */
+        }
+        
         .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         
-        /* Ajuste extra para selects no mobile */
+        /* Ajuste extra para selects no mobile e remoção de double-tap zoom e flash de clique */
         select { appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 0.5rem center; background-size: 1em; padding-right: 2.5rem !important; }
+        
+        body {
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        /* Suavidade no scroll horizontal no mobile */
+        .overflow-x-auto {
+            -webkit-overflow-scrolling: touch;
+        }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col pb-16 md:pb-0">
 
-    <!-- Navbar -->
+    <!-- Navbar Superior -->
     <nav class="bg-brand-700 text-white shadow-lg sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center cursor-pointer" onclick="app.navigate('list')">
+            <div class="flex justify-between md:justify-start h-16">
+                <div class="flex items-center cursor-pointer md:mr-8" onclick="app.navigate('list')">
                     <i class="fa-solid fa-building text-2xl mr-2 text-brand-200"></i>
                     <span class="font-bold text-xl tracking-tight">Meu Apto Ideal</span>
                 </div>
@@ -85,32 +100,42 @@
                         <i class="fa-solid fa-plus mr-1"></i> Adicionar
                     </button>
                 </div>
-
-                <!-- Mobile menu button -->
-                <div class="md:hidden flex items-center">
-                    <button onclick="document.getElementById('mobile-menu').classList.toggle('hidden')" class="text-white hover:text-brand-200 focus:outline-none p-2">
-                        <i class="fa-solid fa-bars text-2xl"></i>
-                    </button>
-                </div>
             </div>
         </div>
-
-        <!-- Mobile Menu -->
-        <div id="mobile-menu" class="hidden md:hidden bg-brand-800 pb-3 pt-2 px-2 space-y-1 shadow-inner">
-            <button onclick="app.navigate('list')" class="block w-full text-left px-3 py-3 rounded-md text-base font-medium text-white hover:bg-brand-600 transition"><i class="fa-solid fa-list w-6 text-center"></i> Apartamentos</button>
-            <button onclick="app.navigate('map')" class="block w-full text-left px-3 py-3 rounded-md text-base font-medium text-white hover:bg-brand-600 transition"><i class="fa-solid fa-map-location-dot w-6 text-center"></i> Mapa</button>
-            <button onclick="app.navigate('compare')" class="block w-full text-left px-3 py-3 rounded-md text-base font-medium text-white hover:bg-brand-600 transition"><i class="fa-solid fa-code-compare w-6 text-center"></i> Comparar</button>
-            <button onclick="app.navigate('favorites')" class="block w-full text-left px-3 py-3 rounded-md text-base font-medium text-white hover:bg-brand-600 transition"><i class="fa-solid fa-heart w-6 text-center"></i> Favoritos</button>
-            <button onclick="app.navigate('form')" class="block w-full text-left px-3 py-3 rounded-md text-base font-bold text-white bg-brand-600 mt-2 shadow"><i class="fa-solid fa-plus w-6 text-center"></i> Adicionar Novo</button>
-        </div>
     </nav>
+
+    <!-- Bottom Navigation (Mobile Only) -->
+    <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around items-center h-16 z-50 pb-safe shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+        <button onclick="app.navigate('list')" class="nav-btn-mobile flex-1 flex flex-col items-center justify-center text-slate-500 hover:text-brand-600 h-full transition-colors" data-target="list">
+            <i class="fa-solid fa-list text-xl mb-1"></i><span class="text-[10px] font-medium">Lista</span>
+        </button>
+        <button onclick="app.navigate('map')" class="nav-btn-mobile flex-1 flex flex-col items-center justify-center text-slate-500 hover:text-brand-600 h-full transition-colors" data-target="map">
+            <i class="fa-solid fa-map-location-dot text-xl mb-1"></i><span class="text-[10px] font-medium">Mapa</span>
+        </button>
+        
+        <!-- Botão Adicionar Flutuante -->
+        <button onclick="app.navigate('form')" class="nav-btn-mobile relative flex-1 flex flex-col items-center justify-center h-full group" data-target="form">
+            <div class="absolute -top-6 bg-brand-600 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg border-4 border-slate-50 group-hover:scale-105 transition-transform duration-200">
+                <i class="fa-solid fa-plus text-xl"></i>
+            </div>
+            <span class="text-[10px] mt-8 text-brand-600 font-bold opacity-0 transition-opacity">Novo</span>
+        </button>
+        
+        <button onclick="app.navigate('compare')" class="nav-btn-mobile flex-1 flex flex-col items-center justify-center text-slate-500 hover:text-brand-600 h-full relative transition-colors" data-target="compare">
+            <i class="fa-solid fa-code-compare text-xl mb-1"></i><span class="text-[10px] font-medium">Comparar</span>
+            <span id="compare-badge-mobile" class="absolute top-1 right-2 bg-red-500 text-white text-[9px] font-bold rounded-full h-4 w-4 flex items-center justify-center hidden shadow-sm">0</span>
+        </button>
+        <button onclick="app.navigate('favorites')" class="nav-btn-mobile flex-1 flex flex-col items-center justify-center text-slate-500 hover:text-brand-600 h-full transition-colors" data-target="favorites">
+            <i class="fa-solid fa-heart text-xl mb-1"></i><span class="text-[10px] font-medium">Favoritos</span>
+        </button>
+    </div>
 
     <!-- Main Content Area -->
     <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 w-full" id="main-content">
         <!-- Views serão injetadas aqui pelo JS -->
     </main>
 
-    <footer class="bg-white border-t border-slate-200 mt-auto py-6">
+    <footer class="bg-white border-t border-slate-200 mt-auto py-6 mb-16 md:mb-0">
         <div class="max-w-7xl mx-auto px-4 text-center text-slate-500 text-sm">
             <p><i class="fa-solid fa-building text-brand-500"></i> Meu Apto Ideal &copy; 2026 - Ferramenta de Comparação Imobiliária.</p>
         </div>
@@ -155,7 +180,6 @@
                 try {
                     if (!supabaseClient) throw new Error("Cliente Supabase não inicializado.");
                     
-                    // Busca dados do Supabase ordenados do mais recente pro mais antigo
                     const { data, error } = await supabaseClient
                         .from('apartments')
                         .select('*')
@@ -166,14 +190,12 @@
                     if (data && data.length > 0) {
                         this.state.apartments = data;
                     } else {
-                        // Se banco estiver vazio, carrega dados de exemplo
                         this.state.apartments = this.getSampleData();
                     }
                 } catch (err) {
                     console.error("Erro ao carregar Supabase:", err);
                     Swal.fire({ icon: 'warning', title: 'Modo Offline', text: 'Supabase não conectado. Usando dados locais.', timer: 3000 });
                     
-                    // Fallback para LocalStorage se a conexão falhar
                     const localData = localStorage.getItem('meuAptoIdealData_v2');
                     if (localData) {
                         this.state.apartments = JSON.parse(localData);
@@ -190,26 +212,30 @@
             },
 
             saveData() {
-                // saveData agora é usado apenas para estado local não persistente (tipo a fila de Comparação)
                 localStorage.setItem('meuAptoIdealCompare', JSON.stringify(this.state.compareList));
                 this.updateCompareBadge();
             },
 
             updateCompareBadge() {
-                const badge = document.getElementById('compare-badge');
+                const badgeDesktop = document.getElementById('compare-badge');
+                const badgeMobile = document.getElementById('compare-badge-mobile');
+                
                 if(this.state.compareList.length > 0) {
-                    badge.textContent = this.state.compareList.length;
-                    badge.classList.remove('hidden');
+                    badgeDesktop.textContent = this.state.compareList.length;
+                    badgeMobile.textContent = this.state.compareList.length;
+                    badgeDesktop.classList.remove('hidden');
+                    badgeMobile.classList.remove('hidden');
                 } else {
-                    badge.classList.add('hidden');
+                    badgeDesktop.classList.add('hidden');
+                    badgeMobile.classList.add('hidden');
                 }
             },
 
             // --- ROUTING & RENDERING ---
             navigate(view) {
                 this.state.view = view;
-                document.getElementById('mobile-menu').classList.add('hidden'); 
                 
+                // Update Desktop Nav
                 document.querySelectorAll('.nav-btn').forEach(btn => {
                     if(btn.dataset.target === view) {
                         btn.classList.add('bg-brand-900', 'text-white');
@@ -217,6 +243,17 @@
                     } else {
                         btn.classList.remove('bg-brand-900');
                         btn.classList.add('hover:bg-brand-600');
+                    }
+                });
+
+                // Update Mobile Nav
+                document.querySelectorAll('.nav-btn-mobile').forEach(btn => {
+                    if(btn.dataset.target === view && view !== 'form') {
+                        btn.classList.add('text-brand-600');
+                        btn.classList.remove('text-slate-500');
+                    } else {
+                        btn.classList.remove('text-brand-600');
+                        btn.classList.add('text-slate-500');
                     }
                 });
 
@@ -234,6 +271,9 @@
                     case 'map': this.renderMap(content); break;
                     case 'compare': this.renderCompare(content); break;
                 }
+                
+                // Scroll to top on navigation
+                window.scrollTo(0,0);
             },
 
             // --- HELPER: RENDER STARS ---
@@ -257,7 +297,7 @@
                         </h1>
                         <div class="flex flex-wrap gap-2 items-center w-full md:w-auto">
                             <span class="text-slate-500 text-sm hidden md:inline">Ordenar por:</span>
-                            <select id="sort-select" onchange="app.handleSort(this.value)" class="w-full md:w-auto bg-white border border-slate-300 text-slate-700 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2.5 outline-none shadow-sm cursor-pointer">
+                            <select id="sort-select" onchange="app.handleSort(this.value)" class="w-full md:w-auto bg-white border border-slate-300 text-slate-700 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2.5 outline-none shadow-sm cursor-pointer">
                                 <option value="dateDesc" ${this.state.sortBy === 'dateDesc' ? 'selected' : ''}>Mais recentes</option>
                                 <option value="priceAsc" ${this.state.sortBy === 'priceAsc' ? 'selected' : ''}>Menor Preço</option>
                                 <option value="priceDesc" ${this.state.sortBy === 'priceDesc' ? 'selected' : ''}>Maior Preço</option>
@@ -269,50 +309,58 @@
                     </div>
 
                     <div class="flex flex-col lg:flex-row gap-6">
-                        <!-- Filters Sidebar -->
+                        <!-- Filters Sidebar (Collapsible on Mobile) -->
                         ${!onlyFavorites ? `
-                        <aside class="w-full lg:w-1/4 bg-white p-5 rounded-xl border border-slate-200 shadow-sm h-fit">
-                            <h2 class="font-bold text-lg mb-4 flex items-center"><i class="fa-solid fa-filter mr-2 text-brand-600"></i> Filtros</h2>
+                        <aside class="w-full lg:w-1/4 bg-white rounded-xl border border-slate-200 shadow-sm h-fit">
+                            <!-- Filter Header / Toggle Mobile -->
+                            <div class="p-5 flex justify-between items-center cursor-pointer lg:cursor-default lg:border-none border-b border-slate-100" 
+                                 onclick="document.getElementById('filter-content').classList.toggle('hidden'); document.getElementById('filter-chevron').classList.toggle('rotate-180');">
+                                <h2 class="font-bold text-lg flex items-center"><i class="fa-solid fa-filter mr-2 text-brand-600"></i> Filtros</h2>
+                                <i id="filter-chevron" class="fa-solid fa-chevron-down lg:hidden text-slate-400 transition-transform duration-300"></i>
+                            </div>
                             
-                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-slate-700 mb-1">Buscar por Título</label>
-                                    <div class="relative">
-                                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                            <i class="fa-solid fa-search text-slate-400"></i>
+                            <!-- Filter Content -->
+                            <div id="filter-content" class="hidden lg:block p-5 pt-0 lg:pt-5 transition-all">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 mt-4 lg:mt-0">
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Buscar por Título</label>
+                                        <div class="relative">
+                                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                                <i class="fa-solid fa-search text-slate-400"></i>
+                                            </div>
+                                            <input type="text" id="filter-title" value="${this.state.filters.searchTitle || ''}" placeholder="Ex: Varanda" class="pl-10 w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2 outline-none transition">
                                         </div>
-                                        <input type="text" id="filter-title" value="${this.state.filters.searchTitle || ''}" placeholder="Ex: Varanda" class="pl-10 w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2 outline-none transition">
                                     </div>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-slate-700 mb-1">Preço Máximo</label>
-                                    <input type="number" id="filter-maxPrice" value="${this.state.filters.maxPrice}" placeholder="Ex: 500000" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2 outline-none transition">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-slate-700 mb-1">Quartos (Mínimo)</label>
-                                    <input type="number" id="filter-bedrooms" value="${this.state.filters.bedrooms}" placeholder="Ex: 2" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2 outline-none transition">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-slate-700 mb-1">Cidade</label>
-                                    <select id="filter-city" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2 outline-none transition cursor-pointer">
-                                        <option value="">Todas as Cidades</option>
-                                        ${uniqueCities.map(c => `<option value="${c}" ${this.state.filters.city === c ? 'selected' : ''}>${c}</option>`).join('')}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-slate-700 mb-1">Bairro</label>
-                                    <select id="filter-neighborhood" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2 outline-none transition cursor-pointer">
-                                        <option value="">Todos os Bairros</option>
-                                        ${uniqueNeighborhoods.map(n => `<option value="${n}" ${this.state.filters.neighborhood === n ? 'selected' : ''}>${n}</option>`).join('')}
-                                    </select>
-                                </div>
-                                <div class="sm:col-span-2 lg:col-span-1 pt-2 space-y-2">
-                                    <button onclick="app.applyFilters()" class="w-full text-white bg-brand-600 hover:bg-brand-700 focus:ring-4 focus:ring-brand-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center transition shadow-sm">
-                                        Aplicar Filtros
-                                    </button>
-                                    <button onclick="app.clearFilters()" class="w-full text-brand-700 bg-brand-50 hover:bg-brand-100 border border-brand-200 font-medium rounded-lg text-sm px-5 py-2.5 text-center transition">
-                                        Limpar
-                                    </button>
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Preço Máximo</label>
+                                        <input type="number" id="filter-maxPrice" value="${this.state.filters.maxPrice}" placeholder="Ex: 500000" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2 outline-none transition">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Quartos (Mínimo)</label>
+                                        <input type="number" id="filter-bedrooms" value="${this.state.filters.bedrooms}" placeholder="Ex: 2" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2 outline-none transition">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Cidade</label>
+                                        <select id="filter-city" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2 outline-none transition cursor-pointer">
+                                            <option value="">Todas as Cidades</option>
+                                            ${uniqueCities.map(c => `<option value="${c}" ${this.state.filters.city === c ? 'selected' : ''}>${c}</option>`).join('')}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Bairro</label>
+                                        <select id="filter-neighborhood" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2 outline-none transition cursor-pointer">
+                                            <option value="">Todos os Bairros</option>
+                                            ${uniqueNeighborhoods.map(n => `<option value="${n}" ${this.state.filters.neighborhood === n ? 'selected' : ''}>${n}</option>`).join('')}
+                                        </select>
+                                    </div>
+                                    <div class="sm:col-span-2 lg:col-span-1 pt-2 space-y-2 lg:space-y-0 lg:flex lg:flex-col gap-2">
+                                        <button onclick="app.applyFilters()" class="w-full text-white bg-brand-600 hover:bg-brand-700 focus:ring-4 focus:ring-brand-300 font-medium rounded-lg text-sm px-5 py-3 md:py-2.5 text-center transition shadow-sm">
+                                            Aplicar Filtros
+                                        </button>
+                                        <button onclick="app.clearFilters()" class="w-full text-brand-700 bg-brand-50 hover:bg-brand-100 border border-brand-200 font-medium rounded-lg text-sm px-5 py-3 md:py-2.5 text-center transition">
+                                            Limpar
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </aside>
@@ -366,7 +414,7 @@
                             </div>
                             <h3 class="text-xl font-bold text-slate-700">Nenhum apartamento encontrado</h3>
                             <p class="text-slate-500 mt-2 max-w-md">Tente ajustar os filtros, buscar por outro bairro ou adicione novas opções ao seu catálogo.</p>
-                            ${!onlyFavorites ? `<button onclick="app.navigate('form')" class="mt-6 bg-brand-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-brand-700 transition shadow">Adicionar Novo Imóvel</button>` : ''}
+                            ${!onlyFavorites ? `<button onclick="app.navigate('form')" class="mt-6 bg-brand-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-brand-700 transition shadow">Adicionar Novo Imóvel</button>` : ''}
                         </div>
                     `;
                     return;
@@ -380,20 +428,20 @@
                         <div class="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col relative group">
                             
                             <!-- Imagem -->
-                            <div class="h-48 bg-slate-200 relative overflow-hidden">
+                            <div class="h-44 md:h-48 bg-slate-200 relative overflow-hidden">
                                 <img src="${apt.photo || 'https://via.placeholder.com/400x300?text=Sem+Foto'}" alt="${apt.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
                                 
                                 <!-- Tags Absolutas -->
-                                <button onclick="app.toggleFavorite('${apt.id}')" class="absolute top-3 right-3 h-9 w-9 bg-white/90 backdrop-blur rounded-full flex items-center justify-center text-lg shadow-sm hover:bg-white hover:scale-110 transition text-${apt.favorite ? 'red-500' : 'slate-400'}">
+                                <button onclick="app.toggleFavorite('${apt.id}')" class="absolute top-3 right-3 h-10 w-10 bg-white/90 backdrop-blur rounded-full flex items-center justify-center text-xl shadow-sm active:scale-95 md:hover:scale-110 md:hover:bg-white transition text-${apt.favorite ? 'red-500' : 'slate-400'}">
                                     <i class="fa-${apt.favorite ? 'solid' : 'regular'} fa-heart"></i>
                                 </button>
-                                <div class="absolute bottom-3 left-3 bg-brand-600/95 backdrop-blur text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow-lg border border-white/20">
+                                <div class="absolute bottom-3 left-3 bg-brand-600/95 backdrop-blur text-white px-3 py-1.5 rounded-lg text-sm md:text-base font-bold shadow-lg border border-white/20">
                                     ${this.formatCurrency(apt.price)}
                                 </div>
                             </div>
 
                             <!-- Conteúdo -->
-                            <div class="p-5 flex-grow flex flex-col">
+                            <div class="p-4 md:p-5 flex-grow flex flex-col">
                                 <h3 class="font-bold text-lg text-slate-800 line-clamp-2 leading-tight mb-2" title="${apt.title}">${apt.title}</h3>
                                 ${apt.building ? `<p class="text-sm text-brand-700 font-semibold mb-1"><i class="fa-regular fa-building mr-1"></i> ${apt.building}</p>` : ''}
                                 <p class="text-sm text-slate-500 mb-3 flex items-center"><i class="fa-solid fa-location-dot w-4 text-center mr-1 text-slate-400"></i> ${apt.neighborhood}, ${apt.city}</p>
@@ -415,15 +463,15 @@
                                 <div class="grid grid-cols-3 gap-2 mb-4 border-y border-slate-100 py-3 bg-slate-50/50 rounded-lg">
                                     <div class="text-center">
                                         <div class="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">Área</div>
-                                        <div class="font-bold text-slate-700 text-sm"><i class="fa-solid fa-ruler-combined text-slate-400 mr-1"></i>${apt.area}m²</div>
+                                        <div class="font-bold text-slate-700 text-sm md:text-base"><i class="fa-solid fa-ruler-combined text-slate-400 mr-1"></i>${apt.area}m²</div>
                                     </div>
                                     <div class="text-center border-l border-r border-slate-200">
                                         <div class="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">Quartos</div>
-                                        <div class="font-bold text-slate-700 text-sm"><i class="fa-solid fa-bed text-slate-400 mr-1"></i>${apt.bedrooms}</div>
+                                        <div class="font-bold text-slate-700 text-sm md:text-base"><i class="fa-solid fa-bed text-slate-400 mr-1"></i>${apt.bedrooms}</div>
                                     </div>
                                     <div class="text-center">
                                         <div class="text-[10px] text-brand-600 uppercase font-bold tracking-wider mb-1">R$/m²</div>
-                                        <div class="font-bold text-brand-700 text-sm">${this.formatCurrency(apt.priceM2).replace(',00', '')}</div>
+                                        <div class="font-bold text-brand-700 text-sm md:text-base">${this.formatCurrency(apt.priceM2).replace(',00', '')}</div>
                                     </div>
                                 </div>
 
@@ -437,20 +485,20 @@
                                     </div>
 
                                     <div class="flex justify-between items-center border-t border-slate-100 pt-3">
-                                        <label class="flex items-center space-x-2 cursor-pointer group/chk">
+                                        <label class="flex items-center space-x-2 cursor-pointer group/chk py-1">
                                             <input type="checkbox" class="w-5 h-5 rounded border-slate-300 text-brand-600 focus:ring-brand-500 transition" 
                                                 onchange="app.toggleCompare('${apt.id}')" ${isCompared ? 'checked' : ''}>
                                             <span class="text-sm font-medium text-slate-600 group-hover/chk:text-brand-600">Comparar</span>
                                         </label>
                                         
                                         <div class="flex space-x-1.5">
-                                            <a href="${apt.link}" target="_blank" class="w-8 h-8 rounded-md bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-brand-100 hover:text-brand-700 transition" title="Ver Anúncio">
+                                            <a href="${apt.link}" target="_blank" class="w-9 h-9 rounded-md bg-slate-100 flex items-center justify-center text-slate-600 active:bg-brand-100 md:hover:bg-brand-100 active:text-brand-700 md:hover:text-brand-700 transition" title="Ver Anúncio">
                                                 <i class="fa-solid fa-arrow-up-right-from-square text-sm"></i>
                                             </a>
-                                            <button onclick="app.editApt('${apt.id}')" class="w-8 h-8 rounded-md bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-amber-100 hover:text-amber-700 transition" title="Editar">
+                                            <button onclick="app.editApt('${apt.id}')" class="w-9 h-9 rounded-md bg-slate-100 flex items-center justify-center text-slate-600 active:bg-amber-100 md:hover:bg-amber-100 active:text-amber-700 md:hover:text-amber-700 transition" title="Editar">
                                                 <i class="fa-solid fa-pen text-sm"></i>
                                             </button>
-                                            <button onclick="app.deleteApt('${apt.id}')" class="w-8 h-8 rounded-md bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-red-100 hover:text-red-700 transition" title="Excluir">
+                                            <button onclick="app.deleteApt('${apt.id}')" class="w-9 h-9 rounded-md bg-slate-100 flex items-center justify-center text-slate-600 active:bg-red-100 md:hover:bg-red-100 active:text-red-700 md:hover:text-red-700 transition" title="Excluir">
                                                 <i class="fa-solid fa-trash text-sm"></i>
                                             </button>
                                         </div>
@@ -478,19 +526,19 @@
                                 </div>
                                 ${isEdit ? 'Editar Imóvel' : 'Cadastrar Imóvel'}
                             </h2>
-                            <button onclick="app.navigate('list'); app.state.editingId = null;" class="text-slate-400 hover:text-slate-700 hover:bg-white rounded-full p-2 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+                            <button onclick="app.navigate('list'); app.state.editingId = null;" class="text-slate-400 hover:text-slate-700 active:bg-slate-200 md:hover:bg-white rounded-full p-2 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
                         </div>
                         
                         <form id="apt-form" class="p-4 md:p-8 space-y-8" onsubmit="event.preventDefault(); app.saveApartment();">
                             
                             <!-- SEÇÃO IA -->
                             <div class="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl p-5 md:p-6 flex flex-col md:flex-row items-center justify-between shadow-sm relative overflow-hidden">
-                                <div class="absolute -right-4 -top-4 text-emerald-100 opacity-50"><i class="fa-solid fa-robot text-9xl"></i></div>
-                                <div class="relative z-10 text-center md:text-left mb-4 md:mb-0">
-                                    <h3 class="font-bold text-emerald-900 text-lg flex items-center justify-center md:justify-start"><i class="fa-solid fa-wand-magic-sparkles text-emerald-600 mr-2"></i> Preencher com Inteligência Artificial</h3>
-                                    <p class="text-sm text-emerald-800 mt-1 max-w-lg">Copie todo o texto da página do anúncio e cole aqui. Nossa IA lerá o texto e preencherá os campos abaixo magicamente para você!</p>
+                                <div class="absolute -right-4 -top-4 text-emerald-100 opacity-50 hidden md:block"><i class="fa-solid fa-robot text-9xl"></i></div>
+                                <div class="relative z-10 text-center md:text-left mb-4 md:mb-0 w-full md:w-auto">
+                                    <h3 class="font-bold text-emerald-900 text-lg flex items-center justify-center md:justify-start"><i class="fa-solid fa-wand-magic-sparkles text-emerald-600 mr-2"></i> Preencher com IA</h3>
+                                    <p class="text-sm text-emerald-800 mt-1 max-w-lg">Cole o texto do anúncio e a IA preencherá os campos abaixo magicamente!</p>
                                 </div>
-                                <button type="button" onclick="app.openAIModal()" class="relative z-10 w-full md:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all hover:scale-105 flex items-center justify-center whitespace-nowrap">
+                                <button type="button" onclick="app.openAIModal()" class="relative z-10 w-full md:w-auto bg-emerald-600 active:bg-emerald-700 md:hover:bg-emerald-700 text-white font-bold py-3 md:py-3 px-6 rounded-lg shadow-md transition-all md:hover:scale-105 flex items-center justify-center whitespace-nowrap">
                                     <i class="fa-solid fa-robot mr-2"></i> Usar IA Agora
                                 </button>
                             </div>
@@ -501,34 +549,34 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                                     <div class="md:col-span-2">
                                         <label class="block text-sm font-medium text-slate-700 mb-1">Título / Descrição Curta *</label>
-                                        <input type="text" id="form-title" required value="${apt.title || ''}" placeholder="Ex: Lindo Apto 2 quartos com varanda" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2.5 outline-none transition">
+                                        <input type="text" id="form-title" required value="${apt.title || ''}" placeholder="Ex: Lindo Apto 2 quartos com varanda" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-base md:text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2.5 outline-none transition">
                                     </div>
                                     
                                     <div>
                                         <label class="block text-sm font-medium text-slate-700 mb-1">Preço do Imóvel (R$) *</label>
-                                        <input type="number" step="0.01" id="form-price" required value="${apt.price || ''}" placeholder="Ex: 350000" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2.5 outline-none transition">
+                                        <input type="number" step="0.01" id="form-price" required value="${apt.price || ''}" placeholder="Ex: 350000" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-base md:text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2.5 outline-none transition">
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-slate-700 mb-1">Área Útil (m²) *</label>
-                                        <input type="number" step="0.1" id="form-area" required value="${apt.area || ''}" placeholder="Ex: 75" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2.5 outline-none transition">
+                                        <input type="number" step="0.1" id="form-area" required value="${apt.area || ''}" placeholder="Ex: 75" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-base md:text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2.5 outline-none transition">
                                     </div>
 
                                     <div>
                                         <label class="block text-sm font-medium text-slate-700 mb-1">Valor Condomínio (R$)</label>
-                                        <input type="number" step="0.01" id="form-condo" value="${apt.condo || ''}" placeholder="Ex: 400" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2.5 outline-none transition">
+                                        <input type="number" step="0.01" id="form-condo" value="${apt.condo || ''}" placeholder="Ex: 400" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-base md:text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2.5 outline-none transition">
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-slate-700 mb-1">IPTU Anual (R$)</label>
-                                        <input type="number" step="0.01" id="form-iptu" value="${apt.iptu || ''}" placeholder="Ex: 1200" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2.5 outline-none transition">
+                                        <input type="number" step="0.01" id="form-iptu" value="${apt.iptu || ''}" placeholder="Ex: 1200" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-base md:text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2.5 outline-none transition">
                                     </div>
 
                                     <div>
                                         <label class="block text-sm font-medium text-slate-700 mb-1">Número de Quartos *</label>
-                                        <input type="number" id="form-bedrooms" required value="${apt.bedrooms || ''}" placeholder="Ex: 2" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2.5 outline-none transition">
+                                        <input type="number" id="form-bedrooms" required value="${apt.bedrooms || ''}" placeholder="Ex: 2" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-base md:text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2.5 outline-none transition">
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-slate-700 mb-1">Link Original (URL) *</label>
-                                        <input type="url" id="form-link" required value="${apt.link || ''}" placeholder="https://..." class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2.5 outline-none transition">
+                                        <input type="url" id="form-link" required value="${apt.link || ''}" placeholder="https://..." class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-base md:text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2.5 outline-none transition">
                                     </div>
                                 </div>
                             </div>
@@ -537,7 +585,6 @@
                             <div>
                                 <h3 class="font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2 text-lg"><i class="fa-solid fa-map-location-dot text-brand-500 mr-2"></i> Localização e Mídia</h3>
                                 
-                                <!-- Datalists para autocompletar Cidades e Bairros já existentes -->
                                 <datalist id="cities-list">
                                     ${[...new Set(this.state.apartments.map(a => a.city))].filter(Boolean).map(c => `<option value="${c}">`).join('')}
                                 </datalist>
@@ -548,23 +595,23 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                                     <div>
                                         <label class="block text-sm font-medium text-slate-700 mb-1">Cidade *</label>
-                                        <input type="text" list="cities-list" id="form-city" required value="${apt.city || ''}" placeholder="Ex: Blumenau" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2.5 outline-none transition">
+                                        <input type="text" list="cities-list" id="form-city" required value="${apt.city || ''}" placeholder="Ex: Blumenau" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-base md:text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2.5 outline-none transition">
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-slate-700 mb-1">Bairro *</label>
-                                        <input type="text" list="neighborhoods-list" id="form-neighborhood" required value="${apt.neighborhood || ''}" placeholder="Ex: Victor Konder" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2.5 outline-none transition">
+                                        <input type="text" list="neighborhoods-list" id="form-neighborhood" required value="${apt.neighborhood || ''}" placeholder="Ex: Victor Konder" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-base md:text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2.5 outline-none transition">
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-slate-700 mb-1">Endereço Completo (Ajuda no Mapa)</label>
-                                        <input type="text" id="form-address" value="${apt.address || ''}" placeholder="Ex: Rua Antônio da Veiga, 100" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2.5 outline-none transition">
+                                        <input type="text" id="form-address" value="${apt.address || ''}" placeholder="Ex: Rua Antônio da Veiga, 100" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-base md:text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2.5 outline-none transition">
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-slate-700 mb-1">Nome do Edifício</label>
-                                        <input type="text" id="form-building" value="${apt.building || ''}" placeholder="Ex: Residencial Bella Vista" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2.5 outline-none transition">
+                                        <input type="text" id="form-building" value="${apt.building || ''}" placeholder="Ex: Residencial Bella Vista" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-base md:text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2.5 outline-none transition">
                                     </div>
                                     <div class="md:col-span-2">
                                         <label class="block text-sm font-medium text-slate-700 mb-1">URL da Foto Principal (Capa)</label>
-                                        <input type="url" id="form-photo" value="${apt.photo || ''}" placeholder="https://.../foto.jpg" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2.5 outline-none transition">
+                                        <input type="url" id="form-photo" value="${apt.photo || ''}" placeholder="https://.../foto.jpg" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-base md:text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2.5 outline-none transition">
                                     </div>
                                 </div>
                             </div>
@@ -576,19 +623,19 @@
                                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                                     <div>
                                         <label class="block text-sm font-medium text-slate-700 mb-1"><i class="fa-solid fa-sack-dollar mr-1 text-slate-400"></i> Nota para Preço</label>
-                                        <select id="form-rating-price" class="w-full bg-white border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2.5 outline-none shadow-sm">
+                                        <select id="form-rating-price" class="w-full bg-white border border-slate-300 text-slate-900 text-base md:text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2.5 outline-none shadow-sm">
                                             ${[1,2,3,4,5].map(n => `<option value="${n}" ${(apt.ratingPrice||3) == n ? 'selected' : ''}>${n} Estrela${n>1?'s':''}</option>`).join('')}
                                         </select>
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-slate-700 mb-1"><i class="fa-solid fa-map-pin mr-1 text-slate-400"></i> Nota para Local</label>
-                                        <select id="form-rating-location" class="w-full bg-white border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2.5 outline-none shadow-sm">
+                                        <select id="form-rating-location" class="w-full bg-white border border-slate-300 text-slate-900 text-base md:text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2.5 outline-none shadow-sm">
                                             ${[1,2,3,4,5].map(n => `<option value="${n}" ${(apt.ratingLocation||3) == n ? 'selected' : ''}>${n} Estrela${n>1?'s':''}</option>`).join('')}
                                         </select>
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-slate-700 mb-1"><i class="fa-solid fa-couch mr-1 text-slate-400"></i> Nota p/ Decoração</label>
-                                        <select id="form-rating-deco" class="w-full bg-white border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2.5 outline-none shadow-sm">
+                                        <select id="form-rating-deco" class="w-full bg-white border border-slate-300 text-slate-900 text-base md:text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2.5 outline-none shadow-sm">
                                             ${[1,2,3,4,5].map(n => `<option value="${n}" ${(apt.ratingDeco||3) == n ? 'selected' : ''}>${n} Estrela${n>1?'s':''}</option>`).join('')}
                                         </select>
                                     </div>
@@ -597,19 +644,18 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div class="md:col-span-2">
                                         <label class="block text-sm font-medium text-slate-700 mb-1">Observações / Prós e Contras</label>
-                                        <textarea id="form-notes" rows="3" class="w-full bg-white border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2.5 outline-none transition" placeholder="Ex: Sol da manhã, aceita pet, precisa pintar...">${apt.notes || ''}</textarea>
+                                        <textarea id="form-notes" rows="3" class="w-full bg-white border border-slate-300 text-slate-900 text-base md:text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2.5 outline-none transition" placeholder="Ex: Sol da manhã, aceita pet, precisa pintar...">${apt.notes || ''}</textarea>
                                     </div>
                                     <div class="md:col-span-2">
                                         <label class="block text-sm font-medium text-slate-700 mb-1"><i class="fa-solid fa-user-tag text-brand-500 mr-1"></i> Cadastrado Por</label>
-                                        <input type="text" id="form-addedBy" required value="${apt.addedBy || 'Você'}" placeholder="Seu nome" class="w-full md:w-1/2 bg-white border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2.5 outline-none transition">
-                                        <p class="text-xs text-slate-500 mt-1">Identificação para quando houver multiusuários (Supabase).</p>
+                                        <input type="text" id="form-addedBy" required value="${apt.addedBy || 'Você'}" placeholder="Seu nome" class="w-full md:w-1/2 bg-white border border-slate-300 text-slate-900 text-base md:text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2.5 outline-none transition">
                                     </div>
                                 </div>
                             </div>
                             
                             <div class="border-t border-slate-200 pt-6 mt-8 flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3">
-                                <button type="button" onclick="app.navigate('list'); app.state.editingId = null;" class="text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 focus:ring-4 focus:ring-slate-100 font-medium rounded-lg text-sm px-6 py-3 transition w-full sm:w-auto text-center">Cancelar</button>
-                                <button type="submit" class="text-white bg-brand-600 hover:bg-brand-700 focus:ring-4 focus:ring-brand-300 font-medium rounded-lg text-sm px-6 py-3 transition flex items-center justify-center shadow-md w-full sm:w-auto">
+                                <button type="button" onclick="app.navigate('list'); app.state.editingId = null;" class="text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 focus:ring-4 focus:ring-slate-100 font-medium rounded-lg text-sm px-6 py-4 md:py-3 transition w-full sm:w-auto text-center">Cancelar</button>
+                                <button type="submit" class="text-white bg-brand-600 hover:bg-brand-700 focus:ring-4 focus:ring-brand-300 font-medium rounded-lg text-sm px-6 py-4 md:py-3 transition flex items-center justify-center shadow-md w-full sm:w-auto">
                                     <i class="fa-solid fa-floppy-disk mr-2"></i> ${isEdit ? 'Salvar Alterações' : 'Cadastrar Apartamento'}
                                 </button>
                             </div>
@@ -778,7 +824,7 @@
                                     <p class="text-brand-600 font-bold mb-1">${this.formatCurrency(apt.price)}</p>
                                     <div class="text-[10px] text-amber-500 mb-2"><i class="fa-solid fa-star"></i> Média: ${avgRating}/5</div>
                                     <p class="text-xs text-slate-500 mb-2 border-t border-slate-100 pt-2"><i class="fa-solid fa-bed"></i> ${apt.bedrooms} | <i class="fa-solid fa-ruler"></i> ${apt.area}m²</p>
-                                    <a href="${apt.link}" target="_blank" class="block w-full text-center bg-brand-500 hover:bg-brand-600 text-white text-xs py-1.5 rounded transition">Ver Anúncio</a>
+                                    <a href="${apt.link}" target="_blank" class="block w-full text-center bg-brand-500 active:bg-brand-600 md:hover:bg-brand-600 text-white text-xs py-2 md:py-1.5 rounded transition">Ver Anúncio</a>
                                 </div>
                             `;
                             marker.bindPopup(popupContent);
@@ -803,7 +849,7 @@
                             <i class="fa-solid fa-scale-balanced text-5xl md:text-6xl text-slate-300 mb-4"></i>
                             <h3 class="text-xl font-bold text-slate-700">Selecione pelo menos 2 imóveis</h3>
                             <p class="text-slate-500 mt-2">Vá até a lista e marque a caixa "Comparar" em dois ou mais apartamentos.</p>
-                            <button onclick="app.navigate('list')" class="mt-6 bg-brand-600 hover:bg-brand-700 text-white px-6 py-2.5 rounded-lg font-medium transition shadow-sm">Ir para Lista</button>
+                            <button onclick="app.navigate('list')" class="mt-6 bg-brand-600 active:bg-brand-700 md:hover:bg-brand-700 text-white px-6 py-3 rounded-lg font-medium transition shadow-sm">Ir para Lista</button>
                         </div>
                     `;
                     return;
@@ -824,7 +870,7 @@
                             <h1 class="text-2xl md:text-3xl font-bold text-slate-800"><i class="fa-solid fa-code-compare text-brand-600 mr-2"></i> Comparador Lado a Lado</h1>
                             <p class="text-slate-500 mt-1 text-sm md:text-base">Comparando ${apts.length} imóveis. <span class="text-emerald-600 font-medium">Verde</span> indica o melhor valor.</p>
                         </div>
-                        <button onclick="app.clearCompare()" class="text-sm text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-4 py-2 rounded-lg transition border border-red-100 font-medium w-full md:w-auto text-center">
+                        <button onclick="app.clearCompare()" class="text-sm text-red-500 md:hover:text-red-700 bg-red-50 active:bg-red-100 md:hover:bg-red-100 px-4 py-3 md:py-2 rounded-lg transition border border-red-100 font-medium w-full md:w-auto text-center">
                             <i class="fa-solid fa-trash mr-1"></i> Limpar Tudo
                         </button>
                     </div>
@@ -837,10 +883,10 @@
                                     ${apts.map(a => `
                                         <th class="p-3 md:p-4 border-b border-slate-200 min-w-[240px] md:min-w-[280px] bg-white align-top">
                                             <div class="relative">
-                                                <button onclick="app.toggleCompare('${a.id}'); app.renderCompare(document.getElementById('main-content'));" class="absolute -top-2 -right-2 w-6 h-6 bg-red-100 text-red-500 rounded-full flex items-center justify-center hover:bg-red-500 hover:text-white transition shadow-sm" title="Remover">
-                                                    <i class="fa-solid fa-xmark text-xs"></i>
+                                                <button onclick="app.toggleCompare('${a.id}'); app.renderCompare(document.getElementById('main-content'));" class="absolute -top-2 -right-2 w-8 h-8 md:w-6 md:h-6 bg-red-100 text-red-500 rounded-full flex items-center justify-center md:hover:bg-red-500 active:bg-red-500 active:text-white md:hover:text-white transition shadow-sm" title="Remover">
+                                                    <i class="fa-solid fa-xmark text-sm md:text-xs"></i>
                                                 </button>
-                                                <img src="${a.photo || 'https://via.placeholder.com/300x200'}" class="w-full h-24 md:h-32 object-cover rounded-lg mb-3 shadow-sm">
+                                                <img src="${a.photo || 'https://via.placeholder.com/300x200'}" class="w-full h-32 object-cover rounded-lg mb-3 shadow-sm">
                                                 <h4 class="font-bold text-slate-800 text-sm line-clamp-2">${a.title}</h4>
                                                 <p class="text-xs text-slate-500 mt-1">${a.neighborhood}, ${a.city}</p>
                                             </div>
@@ -917,7 +963,7 @@
                                     <td class="p-3 md:p-4 border-r border-slate-200 bg-slate-50 sticky left-0 z-10 shadow-[1px_0_0_0_#e2e8f0]"></td>
                                     ${apts.map(a => `
                                         <td class="p-3 md:p-4 bg-slate-50">
-                                            <a href="${a.link}" target="_blank" class="block w-full text-center bg-brand-600 hover:bg-brand-700 text-white font-medium py-2 rounded-lg transition shadow-sm text-sm">
+                                            <a href="${a.link}" target="_blank" class="block w-full text-center bg-brand-600 active:bg-brand-700 md:hover:bg-brand-700 text-white font-medium py-3 md:py-2 rounded-lg transition shadow-sm text-sm">
                                                 Ver Anúncio <i class="fa-solid fa-external-link-alt ml-1"></i>
                                             </a>
                                         </td>
@@ -1028,6 +1074,11 @@
                     neighborhood: document.getElementById('filter-neighborhood').value,
                 };
                 this.renderList(document.getElementById('main-content'), false);
+                // Fecha filtro mobile após aplicar
+                if (window.innerWidth < 1024) {
+                    document.getElementById('filter-content').classList.add('hidden');
+                    document.getElementById('filter-chevron').classList.remove('rotate-180');
+                }
             },
 
             clearFilters() {
