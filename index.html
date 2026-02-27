@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Apto Ideal</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            200: '#a7f3d0',
+                            300: '#6ee7b7',
+                            400: '#34d399',
+                            500: '#10b981',
+                            600: '#059669', /* Nova cor principal: Verde Esmeralda/Teal */
+                            700: '#047857',
+                            800: '#065f46',
+                            900: '#064e3b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Font Awesome para Ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Leaflet CSS (Mapa) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- SweetAlert2 para Alertas Bonitos -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        /* Estilos adicionais para mapa e scrollbar */
+        #map { height: 600px; width: 100%; z-index: 10; border-radius: 0.5rem; }
+        .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        
+        /* Ajuste extra para selects no mobile */
+        select { appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 0.5rem center; background-size: 1em; padding-right: 2.5rem !important; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <nav class="bg-brand-700 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center cursor-pointer" onclick="app.navigate('list')">
+                    <i class="fa-solid fa-building text-2xl mr-2 text-brand-200"></i>
+                    <span class="font-bold text-xl tracking-tight">Meu Apto Ideal</span>
+                </div>
+                
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex items-center space-x-1" id="nav-links">
+                    <button onclick="app.navigate('list')" class="nav-btn px-3 py-2 rounded-md text-sm font-medium hover:bg-brand-600 transition" data-target="list">
+                        <i class="fa-solid fa-list mr-1"></i> Apartamentos
+                    </button>
+                    <button onclick="app.navigate('map')" class="nav-btn px-3 py-2 rounded-md text-sm font-medium hover:bg-brand-600 transition" data-target="map">
+                        <i class="fa-solid fa-map-location-dot mr-1"></i> Mapa
+                    </button>
+                    <button onclick="app.navigate('compare')" class="nav-btn px-3 py-2 rounded-md text-sm font-medium hover:bg-brand-600 transition relative" data-target="compare">
+                        <i class="fa-solid fa-code-compare mr-1"></i> Comparar
+                        <span id="compare-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center hidden shadow-sm">0</span>
+                    </button>
+                    <button onclick="app.navigate('favorites')" class="nav-btn px-3 py-2 rounded-md text-sm font-medium hover:bg-brand-600 transition" data-target="favorites">
+                        <i class="fa-solid fa-heart mr-1"></i> Favoritos
+                    </button>
+                    <button onclick="app.navigate('form')" class="ml-4 bg-brand-500 hover:bg-brand-400 text-white px-4 py-2 rounded-md text-sm font-bold shadow transition">
+                        <i class="fa-solid fa-plus mr-1"></i> Adicionar
+                    </button>
+                </div>
+
+                <!-- Mobile menu button -->
+                <div class="md:hidden flex items-center">
+                    <button onclick="document.getElementById('mobile-menu').classList.toggle('hidden')" class="text-white hover:text-brand-200 focus:outline-none p-2">
+                        <i class="fa-solid fa-bars text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-brand-800 pb-3 pt-2 px-2 space-y-1 shadow-inner">
+            <button onclick="app.navigate('list')" class="block w-full text-left px-3 py-3 rounded-md text-base font-medium text-white hover:bg-brand-600 transition"><i class="fa-solid fa-list w-6 text-center"></i> Apartamentos</button>
+            <button onclick="app.navigate('map')" class="block w-full text-left px-3 py-3 rounded-md text-base font-medium text-white hover:bg-brand-600 transition"><i class="fa-solid fa-map-location-dot w-6 text-center"></i> Mapa</button>
+            <button onclick="app.navigate('compare')" class="block w-full text-left px-3 py-3 rounded-md text-base font-medium text-white hover:bg-brand-600 transition"><i class="fa-solid fa-code-compare w-6 text-center"></i> Comparar</button>
+            <button onclick="app.navigate('favorites')" class="block w-full text-left px-3 py-3 rounded-md text-base font-medium text-white hover:bg-brand-600 transition"><i class="fa-solid fa-heart w-6 text-center"></i> Favoritos</button>
+            <button onclick="app.navigate('form')" class="block w-full text-left px-3 py-3 rounded-md text-base font-bold text-white bg-brand-600 mt-2 shadow"><i class="fa-solid fa-plus w-6 text-center"></i> Adicionar Novo</button>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 w-full" id="main-content">
+        <!-- Views serão injetadas aqui pelo JS -->
+    </main>
+
+    <footer class="bg-white border-t border-slate-200 mt-auto py-6">
+        <div class="max-w-7xl mx-auto px-4 text-center text-slate-500 text-sm">
+            <p><i class="fa-solid fa-building text-brand-500"></i> Meu Apto Ideal &copy; 2026 - Ferramenta de Comparação Imobiliária.</p>
+        </div>
+    </footer>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Application Logic -->
+    <script>
+        // --- INICIALIZAÇÃO SUPABASE ---
+        const supabaseUrl = 'https://ydazjbnolrsheicyefmh.supabase.co'; 
+        const supabaseKey = 'sb_publishable_uftOQnToDUBrydtMrIAt7w_WvvwfXu1';
+        
+        let supabaseClient = null;
+        try {
+            supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+        } catch (error) {
+            console.warn("Supabase URL inválida. O aplicativo rodará em modo local.");
+        }
+
+        // --- DATA & STATE MANAGEMENT ---
+        const app = {
+            state: {
+                view: 'list',
+                apartments: [],
+                compareList: [],
+                filters: { maxPrice: '', minArea: '', city: '', neighborhood: '', bedrooms: '', searchTitle: '' },
+                sortBy: 'dateDesc',
+                editingId: null,
+                mapInstance: null
+            },
+
+            async init() {
+                await this.loadData();
+                this.navigate('list');
+            },
+
+            async loadData() {
+                Swal.fire({ title: 'Carregando...', text: 'Buscando dados no banco na nuvem', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                
+                try {
+                    if (!supabaseClient) throw new Error("Cliente Supabase não inicializado.");
+                    
+                    // Busca dados do Supabase ordenados do mais recente pro mais antigo
+                    const { data, error } = await supabaseClient
+                        .from('apartments')
+                        .select('*')
+                        .order('dateAdded', { ascending: false });
+                        
+                    if (error) throw error;
+                    
+                    if (data && data.length > 0) {
+                        this.state.apartments = data;
+                    } else {
+                        // Se banco estiver vazio, carrega dados de exemplo
+                        this.state.apartments = this.getSampleData();
+                    }
+                } catch (err) {
+                    console.error("Erro ao carregar Supabase:", err);
+                    Swal.fire({ icon: 'warning', title: 'Modo Offline', text: 'Supabase não conectado. Usando dados locais.', timer: 3000 });
+                    
+                    // Fallback para LocalStorage se a conexão falhar
+                    const localData = localStorage.getItem('meuAptoIdealData_v2');
+                    if (localData) {
+                        this.state.apartments = JSON.parse(localData);
+                    } else {
+                        this.state.apartments = this.getSampleData();
+                    }
+                }
+
+                const compareData = localStorage.getItem('meuAptoIdealCompare');
+                if(compareData) this.state.compareList = JSON.parse(compareData);
+                this.updateCompareBadge();
+                
+                Swal.close();
+            },
+
+            saveData() {
+                // saveData agora é usado apenas para estado local não persistente (tipo a fila de Comparação)
+                localStorage.setItem('meuAptoIdealCompare', JSON.stringify(this.state.compareList));
+                this.updateCompareBadge();
+            },
+
+            updateCompareBadge() {
+                const badge = document.getElementById('compare-badge');
+                if(this.state.compareList.length > 0) {
+                    badge.textContent = this.state.compareList.length;
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            },
+
+            // --- ROUTING & RENDERING ---
+            navigate(view) {
+                this.state.view = view;
+                document.getElementById('mobile-menu').classList.add('hidden'); 
+                
+                document.querySelectorAll('.nav-btn').forEach(btn => {
+                    if(btn.dataset.target === view) {
+                        btn.classList.add('bg-brand-900', 'text-white');
+                        btn.classList.remove('hover:bg-brand-600');
+                    } else {
+                        btn.classList.remove('bg-brand-900');
+                        btn.classList.add('hover:bg-brand-600');
+                    }
+                });
+
+                const content = document.getElementById('main-content');
+                
+                if (this.state.view !== 'map' && this.state.mapInstance) {
+                    this.state.mapInstance.remove();
+                    this.state.mapInstance = null;
+                }
+
+                switch(view) {
+                    case 'list': this.renderList(content, false); break;
+                    case 'favorites': this.renderList(content, true); break;
+                    case 'form': this.renderForm(content); break;
+                    case 'map': this.renderMap(content); break;
+                    case 'compare': this.renderCompare(content); break;
+                }
+            },
+
+            // --- HELPER: RENDER STARS ---
+            renderStars(rating) {
+                let html = '';
+                for(let i=1; i<=5; i++) {
+                    html += `<i class="fa-solid fa-star ${i <= rating ? 'text-amber-400' : 'text-slate-200'}"></i>`;
+                }
+                return html;
+            },
+
+            // --- VIEW: LIST / FAVORITES ---
+            renderList(container, onlyFavorites = false) {
+                const uniqueCities = [...new Set(this.state.apartments.map(a => a.city))].filter(Boolean).sort();
+                const uniqueNeighborhoods = [...new Set(this.state.apartments.map(a => a.neighborhood))].filter(Boolean).sort();
+
+                let html = `
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                        <h1 class="text-2xl md:text-3xl font-bold text-slate-800">
+                            ${onlyFavorites ? '<i class="fa-solid fa-heart text-red-500 mr-2"></i> Meus Favoritos' : 'Todos os Apartamentos'}
+                        </h1>
+                        <div class="flex flex-wrap gap-2 items-center w-full md:w-auto">
+                            <span class="text-slate-500 text-sm hidden md:inline">Ordenar por:</span>
+                            <select id="sort-select" onchange="app.handleSort(this.value)" class="w-full md:w-auto bg-white border border-slate-300 text-slate-700 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2.5 outline-none shadow-sm cursor-pointer">
+                                <option value="dateDesc" ${this.state.sortBy === 'dateDesc' ? 'selected' : ''}>Mais recentes</option>
+                                <option value="priceAsc" ${this.state.sortBy === 'priceAsc' ? 'selected' : ''}>Menor Preço</option>
+                                <option value="priceDesc" ${this.state.sortBy === 'priceDesc' ? 'selected' : ''}>Maior Preço</option>
+                                <option value="priceM2Asc" ${this.state.sortBy === 'priceM2Asc' ? 'selected' : ''}>Melhor Preço/m²</option>
+                                <option value="areaDesc" ${this.state.sortBy === 'areaDesc' ? 'selected' : ''}>Maior Área</option>
+                                <option value="ratingDesc" ${this.state.sortBy === 'ratingDesc' ? 'selected' : ''}>Melhor Avaliado (Média)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col lg:flex-row gap-6">
+                        <!-- Filters Sidebar -->
+                        ${!onlyFavorites ? `
+                        <aside class="w-full lg:w-1/4 bg-white p-5 rounded-xl border border-slate-200 shadow-sm h-fit">
+                            <h2 class="font-bold text-lg mb-4 flex items-center"><i class="fa-solid fa-filter mr-2 text-brand-600"></i> Filtros</h2>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Buscar por Título</label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                            <i class="fa-solid fa-search text-slate-400"></i>
+                                        </div>
+                                        <input type="text" id="filter-title" value="${this.state.filters.searchTitle || ''}" placeholder="Ex: Varanda" class="pl-10 w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2 outline-none transition">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Preço Máximo</label>
+                                    <input type="number" id="filter-maxPrice" value="${this.state.filters.maxPrice}" placeholder="Ex: 500000" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2 outline-none transition">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Quartos (Mínimo)</label>
+                                    <input type="number" id="filter-bedrooms" value="${this.state.filters.bedrooms}" placeholder="Ex: 2" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2 outline-none transition">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Cidade</label>
+                                    <select id="filter-city" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2 outline-none transition cursor-pointer">
+                                        <option value="">Todas as Cidades</option>
+                                        ${uniqueCities.map(c => `<option value="${c}" ${this.state.filters.city === c ? 'selected' : ''}>${c}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Bairro</label>
+                                    <select id="filter-neighborhood" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2 outline-none transition cursor-pointer">
+                                        <option value="">Todos os Bairros</option>
+                                        ${uniqueNeighborhoods.map(n => `<option value="${n}" ${this.state.filters.neighborhood === n ? 'selected' : ''}>${n}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div class="sm:col-span-2 lg:col-span-1 pt-2 space-y-2">
+                                    <button onclick="app.applyFilters()" class="w-full text-white bg-brand-600 hover:bg-brand-700 focus:ring-4 focus:ring-brand-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center transition shadow-sm">
+                                        Aplicar Filtros
+                                    </button>
+                                    <button onclick="app.clearFilters()" class="w-full text-brand-700 bg-brand-50 hover:bg-brand-100 border border-brand-200 font-medium rounded-lg text-sm px-5 py-2.5 text-center transition">
+                                        Limpar
+                                    </button>
+                                </div>
+                            </div>
+                        </aside>
+                        ` : ''}
+
+                        <!-- Grid de Apartamentos -->
+                        <div class="w-full ${!onlyFavorites ? 'lg:w-3/4' : ''}" id="apt-grid">
+                            <!-- Cards injetados via JS -->
+                        </div>
+                    </div>
+                `;
+                container.innerHTML = html;
+                this.renderGrid(onlyFavorites);
+            },
+
+            renderGrid(onlyFavorites) {
+                const grid = document.getElementById('apt-grid');
+                let filtered = this.state.apartments;
+
+                if (onlyFavorites) {
+                    filtered = filtered.filter(a => a.favorite);
+                } else {
+                    const { maxPrice, bedrooms, city, neighborhood, searchTitle } = this.state.filters;
+                    if (searchTitle) filtered = filtered.filter(a => a.title.toLowerCase().includes(searchTitle.toLowerCase()));
+                    if (maxPrice) filtered = filtered.filter(a => a.price <= parseFloat(maxPrice));
+                    if (bedrooms) filtered = filtered.filter(a => a.bedrooms >= parseInt(bedrooms));
+                    if (city) filtered = filtered.filter(a => a.city === city);
+                    if (neighborhood) filtered = filtered.filter(a => a.neighborhood === neighborhood);
+                }
+
+                filtered.sort((a, b) => {
+                    switch(this.state.sortBy) {
+                        case 'priceAsc': return a.price - b.price;
+                        case 'priceDesc': return b.price - a.price;
+                        case 'priceM2Asc': return a.priceM2 - b.priceM2;
+                        case 'areaDesc': return b.area - a.area;
+                        case 'ratingDesc': 
+                            const avgA = (parseInt(a.ratingPrice||0) + parseInt(a.ratingLocation||0) + parseInt(a.ratingDeco||0))/3;
+                            const avgB = (parseInt(b.ratingPrice||0) + parseInt(b.ratingLocation||0) + parseInt(b.ratingDeco||0))/3;
+                            return avgB - avgA;
+                        case 'dateDesc': return new Date(b.dateAdded) - new Date(a.dateAdded);
+                        default: return 0;
+                    }
+                });
+
+                if (filtered.length === 0) {
+                    grid.innerHTML = `
+                        <div class="bg-white rounded-xl border border-slate-200 p-8 md:p-12 text-center flex flex-col items-center justify-center h-full shadow-sm">
+                            <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+                                <i class="fa-regular fa-folder-open text-4xl text-slate-400"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-slate-700">Nenhum apartamento encontrado</h3>
+                            <p class="text-slate-500 mt-2 max-w-md">Tente ajustar os filtros, buscar por outro bairro ou adicione novas opções ao seu catálogo.</p>
+                            ${!onlyFavorites ? `<button onclick="app.navigate('form')" class="mt-6 bg-brand-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-brand-700 transition shadow">Adicionar Novo Imóvel</button>` : ''}
+                        </div>
+                    `;
+                    return;
+                }
+
+                let cardsHtml = `<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">`;
+                
+                filtered.forEach(apt => {
+                    const isCompared = this.state.compareList.includes(apt.id);
+                    cardsHtml += `
+                        <div class="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col relative group">
+                            
+                            <!-- Imagem -->
+                            <div class="h-48 bg-slate-200 relative overflow-hidden">
+                                <img src="${apt.photo || 'https://via.placeholder.com/400x300?text=Sem+Foto'}" alt="${apt.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                                
+                                <!-- Tags Absolutas -->
+                                <button onclick="app.toggleFavorite('${apt.id}')" class="absolute top-3 right-3 h-9 w-9 bg-white/90 backdrop-blur rounded-full flex items-center justify-center text-lg shadow-sm hover:bg-white hover:scale-110 transition text-${apt.favorite ? 'red-500' : 'slate-400'}">
+                                    <i class="fa-${apt.favorite ? 'solid' : 'regular'} fa-heart"></i>
+                                </button>
+                                <div class="absolute bottom-3 left-3 bg-brand-600/95 backdrop-blur text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow-lg border border-white/20">
+                                    ${this.formatCurrency(apt.price)}
+                                </div>
+                            </div>
+
+                            <!-- Conteúdo -->
+                            <div class="p-5 flex-grow flex flex-col">
+                                <h3 class="font-bold text-lg text-slate-800 line-clamp-2 leading-tight mb-2" title="${apt.title}">${apt.title}</h3>
+                                ${apt.building ? `<p class="text-sm text-brand-700 font-semibold mb-1"><i class="fa-regular fa-building mr-1"></i> ${apt.building}</p>` : ''}
+                                <p class="text-sm text-slate-500 mb-3 flex items-center"><i class="fa-solid fa-location-dot w-4 text-center mr-1 text-slate-400"></i> ${apt.neighborhood}, ${apt.city}</p>
+                                
+                                <!-- Avaliações Mini -->
+                                <div class="flex flex-wrap gap-2 text-[10px] md:text-xs mb-4">
+                                    <div class="bg-slate-50 px-2 py-1 rounded border border-slate-100 flex items-center" title="Nota de Preço">
+                                        <i class="fa-solid fa-sack-dollar text-slate-400 mr-1.5"></i> ${this.renderStars(apt.ratingPrice)}
+                                    </div>
+                                    <div class="bg-slate-50 px-2 py-1 rounded border border-slate-100 flex items-center" title="Nota de Localização">
+                                        <i class="fa-solid fa-map-pin text-slate-400 mr-1.5"></i> ${this.renderStars(apt.ratingLocation)}
+                                    </div>
+                                    <div class="bg-slate-50 px-2 py-1 rounded border border-slate-100 flex items-center" title="Nota de Decoração">
+                                        <i class="fa-solid fa-couch text-slate-400 mr-1.5"></i> ${this.renderStars(apt.ratingDeco)}
+                                    </div>
+                                </div>
+
+                                <!-- Métricas (Grid) -->
+                                <div class="grid grid-cols-3 gap-2 mb-4 border-y border-slate-100 py-3 bg-slate-50/50 rounded-lg">
+                                    <div class="text-center">
+                                        <div class="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">Área</div>
+                                        <div class="font-bold text-slate-700 text-sm"><i class="fa-solid fa-ruler-combined text-slate-400 mr-1"></i>${apt.area}m²</div>
+                                    </div>
+                                    <div class="text-center border-l border-r border-slate-200">
+                                        <div class="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">Quartos</div>
+                                        <div class="font-bold text-slate-700 text-sm"><i class="fa-solid fa-bed text-slate-400 mr-1"></i>${apt.bedrooms}</div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-[10px] text-brand-600 uppercase font-bold tracking-wider mb-1">R$/m²</div>
+                                        <div class="font-bold text-brand-700 text-sm">${this.formatCurrency(apt.priceM2).replace(',00', '')}</div>
+                                    </div>
+                                </div>
+
+                                <!-- Cadastrado por (Footer) -->
+                                <div class="mt-auto pt-1">
+                                    <div class="flex items-center text-xs text-slate-500 mb-3">
+                                        <div class="w-5 h-5 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center mr-2">
+                                            <i class="fa-solid fa-user text-[10px]"></i>
+                                        </div>
+                                        Cadastrado por: <span class="font-semibold text-slate-700 ml-1 truncate">${apt.addedBy || 'Você'}</span>
+                                    </div>
+
+                                    <div class="flex justify-between items-center border-t border-slate-100 pt-3">
+                                        <label class="flex items-center space-x-2 cursor-pointer group/chk">
+                                            <input type="checkbox" class="w-5 h-5 rounded border-slate-300 text-brand-600 focus:ring-brand-500 transition" 
+                                                onchange="app.toggleCompare('${apt.id}')" ${isCompared ? 'checked' : ''}>
+                                            <span class="text-sm font-medium text-slate-600 group-hover/chk:text-brand-600">Comparar</span>
+                                        </label>
+                                        
+                                        <div class="flex space-x-1.5">
+                                            <a href="${apt.link}" target="_blank" class="w-8 h-8 rounded-md bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-brand-100 hover:text-brand-700 transition" title="Ver Anúncio">
+                                                <i class="fa-solid fa-arrow-up-right-from-square text-sm"></i>
+                                            </a>
+                                            <button onclick="app.editApt('${apt.id}')" class="w-8 h-8 rounded-md bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-amber-100 hover:text-amber-700 transition" title="Editar">
+                                                <i class="fa-solid fa-pen text-sm"></i>
+                                            </button>
+                                            <button onclick="app.deleteApt('${apt.id}')" class="w-8 h-8 rounded-md bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-red-100 hover:text-red-700 transition" title="Excluir">
+                                                <i class="fa-solid fa-trash text-sm"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                cardsHtml += `</div>`;
+                grid.innerHTML = cardsHtml;
+            },
+
+            // --- VIEW: FORM (ADD / EDIT) ---
+            renderForm(container) {
+                const isEdit = this.state.editingId !== null;
+                const apt = isEdit ? this.state.apartments.find(a => a.id === this.state.editingId) : {};
+
+                let html = `
+                    <div class="max-w-4xl mx-auto bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="bg-brand-50 px-4 md:px-6 py-4 border-b border-brand-100 flex justify-between items-center">
+                            <h2 class="text-xl md:text-2xl font-bold text-brand-900 flex items-center">
+                                <div class="w-8 h-8 rounded-full bg-brand-600 text-white flex items-center justify-center mr-3 shadow-sm">
+                                    <i class="fa-solid fa-${isEdit ? 'pen' : 'plus'} text-sm"></i>
+                                </div>
+                                ${isEdit ? 'Editar Imóvel' : 'Cadastrar Imóvel'}
+                            </h2>
+                            <button onclick="app.navigate('list'); app.state.editingId = null;" class="text-slate-400 hover:text-slate-700 hover:bg-white rounded-full p-2 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+                        </div>
+                        
+                        <form id="apt-form" class="p-4 md:p-8 space-y-8" onsubmit="event.preventDefault(); app.saveApartment();">
+                            
+                            <!-- SEÇÃO IA -->
+                            <div class="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl p-5 md:p-6 flex flex-col md:flex-row items-center justify-between shadow-sm relative overflow-hidden">
+                                <div class="absolute -right-4 -top-4 text-emerald-100 opacity-50"><i class="fa-solid fa-robot text-9xl"></i></div>
+                                <div class="relative z-10 text-center md:text-left mb-4 md:mb-0">
+                                    <h3 class="font-bold text-emerald-900 text-lg flex items-center justify-center md:justify-start"><i class="fa-solid fa-wand-magic-sparkles text-emerald-600 mr-2"></i> Preencher com Inteligência Artificial</h3>
+                                    <p class="text-sm text-emerald-800 mt-1 max-w-lg">Copie todo o texto da página do anúncio e cole aqui. Nossa IA lerá o texto e preencherá os campos abaixo magicamente para você!</p>
+                                </div>
+                                <button type="button" onclick="app.openAIModal()" class="relative z-10 w-full md:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition-all hover:scale-105 flex items-center justify-center whitespace-nowrap">
+                                    <i class="fa-solid fa-robot mr-2"></i> Usar IA Agora
+                                </button>
+                            </div>
+
+                            <!-- SEÇÃO 1: DADOS BÁSICOS -->
+                            <div>
+                                <h3 class="font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2 text-lg"><i class="fa-solid fa-file-lines text-brand-500 mr-2"></i> Dados do Anúncio</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                                    <div class="md:col-span-2">
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Título / Descrição Curta *</label>
+                                        <input type="text" id="form-title" required value="${apt.title || ''}" placeholder="Ex: Lindo Apto 2 quartos com varanda" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2.5 outline-none transition">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Preço do Imóvel (R$) *</label>
+                                        <input type="number" step="0.01" id="form-price" required value="${apt.price || ''}" placeholder="Ex: 350000" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2.5 outline-none transition">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Área Útil (m²) *</label>
+                                        <input type="number" step="0.1" id="form-area" required value="${apt.area || ''}" placeholder="Ex: 75" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2.5 outline-none transition">
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Valor Condomínio (R$)</label>
+                                        <input type="number" step="0.01" id="form-condo" value="${apt.condo || ''}" placeholder="Ex: 400" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2.5 outline-none transition">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">IPTU Anual (R$)</label>
+                                        <input type="number" step="0.01" id="form-iptu" value="${apt.iptu || ''}" placeholder="Ex: 1200" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2.5 outline-none transition">
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Número de Quartos *</label>
+                                        <input type="number" id="form-bedrooms" required value="${apt.bedrooms || ''}" placeholder="Ex: 2" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2.5 outline-none transition">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Link Original (URL) *</label>
+                                        <input type="url" id="form-link" required value="${apt.link || ''}" placeholder="https://..." class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2.5 outline-none transition">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- SEÇÃO 2: LOCALIZAÇÃO -->
+                            <div>
+                                <h3 class="font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2 text-lg"><i class="fa-solid fa-map-location-dot text-brand-500 mr-2"></i> Localização e Mídia</h3>
+                                
+                                <!-- Datalists para autocompletar Cidades e Bairros já existentes -->
+                                <datalist id="cities-list">
+                                    ${[...new Set(this.state.apartments.map(a => a.city))].filter(Boolean).map(c => `<option value="${c}">`).join('')}
+                                </datalist>
+                                <datalist id="neighborhoods-list">
+                                    ${[...new Set(this.state.apartments.map(a => a.neighborhood))].filter(Boolean).map(n => `<option value="${n}">`).join('')}
+                                </datalist>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Cidade *</label>
+                                        <input type="text" list="cities-list" id="form-city" required value="${apt.city || ''}" placeholder="Ex: Blumenau" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2.5 outline-none transition">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Bairro *</label>
+                                        <input type="text" list="neighborhoods-list" id="form-neighborhood" required value="${apt.neighborhood || ''}" placeholder="Ex: Victor Konder" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2.5 outline-none transition">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Endereço Completo (Ajuda no Mapa)</label>
+                                        <input type="text" id="form-address" value="${apt.address || ''}" placeholder="Ex: Rua Antônio da Veiga, 100" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2.5 outline-none transition">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Nome do Edifício</label>
+                                        <input type="text" id="form-building" value="${apt.building || ''}" placeholder="Ex: Residencial Bella Vista" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2.5 outline-none transition">
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">URL da Foto Principal (Capa)</label>
+                                        <input type="url" id="form-photo" value="${apt.photo || ''}" placeholder="https://.../foto.jpg" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2.5 outline-none transition">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- SEÇÃO 3: AVALIAÇÕES E INTEGRAÇÃO -->
+                            <div class="bg-slate-50 p-4 md:p-5 rounded-xl border border-slate-200">
+                                <h3 class="font-bold text-slate-800 mb-4 border-b border-slate-200 pb-2 text-lg"><i class="fa-solid fa-star-half-stroke text-amber-500 mr-2"></i> Suas Avaliações (1 a 5)</h3>
+                                
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1"><i class="fa-solid fa-sack-dollar mr-1 text-slate-400"></i> Nota para Preço</label>
+                                        <select id="form-rating-price" class="w-full bg-white border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2.5 outline-none shadow-sm">
+                                            ${[1,2,3,4,5].map(n => `<option value="${n}" ${(apt.ratingPrice||3) == n ? 'selected' : ''}>${n} Estrela${n>1?'s':''}</option>`).join('')}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1"><i class="fa-solid fa-map-pin mr-1 text-slate-400"></i> Nota para Local</label>
+                                        <select id="form-rating-location" class="w-full bg-white border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2.5 outline-none shadow-sm">
+                                            ${[1,2,3,4,5].map(n => `<option value="${n}" ${(apt.ratingLocation||3) == n ? 'selected' : ''}>${n} Estrela${n>1?'s':''}</option>`).join('')}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1"><i class="fa-solid fa-couch mr-1 text-slate-400"></i> Nota p/ Decoração</label>
+                                        <select id="form-rating-deco" class="w-full bg-white border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2.5 outline-none shadow-sm">
+                                            ${[1,2,3,4,5].map(n => `<option value="${n}" ${(apt.ratingDeco||3) == n ? 'selected' : ''}>${n} Estrela${n>1?'s':''}</option>`).join('')}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="md:col-span-2">
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Observações / Prós e Contras</label>
+                                        <textarea id="form-notes" rows="3" class="w-full bg-white border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2.5 outline-none transition" placeholder="Ex: Sol da manhã, aceita pet, precisa pintar...">${apt.notes || ''}</textarea>
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <label class="block text-sm font-medium text-slate-700 mb-1"><i class="fa-solid fa-user-tag text-brand-500 mr-1"></i> Cadastrado Por</label>
+                                        <input type="text" id="form-addedBy" required value="${apt.addedBy || 'Você'}" placeholder="Seu nome" class="w-full md:w-1/2 bg-white border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-2.5 outline-none transition">
+                                        <p class="text-xs text-slate-500 mt-1">Identificação para quando houver multiusuários (Supabase).</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="border-t border-slate-200 pt-6 mt-8 flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3">
+                                <button type="button" onclick="app.navigate('list'); app.state.editingId = null;" class="text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 focus:ring-4 focus:ring-slate-100 font-medium rounded-lg text-sm px-6 py-3 transition w-full sm:w-auto text-center">Cancelar</button>
+                                <button type="submit" class="text-white bg-brand-600 hover:bg-brand-700 focus:ring-4 focus:ring-brand-300 font-medium rounded-lg text-sm px-6 py-3 transition flex items-center justify-center shadow-md w-full sm:w-auto">
+                                    <i class="fa-solid fa-floppy-disk mr-2"></i> ${isEdit ? 'Salvar Alterações' : 'Cadastrar Apartamento'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                `;
+                container.innerHTML = html;
+            },
+
+            async saveApartment() {
+                // Get form values
+                const title = document.getElementById('form-title').value;
+                const link = document.getElementById('form-link').value;
+                const price = parseFloat(document.getElementById('form-price').value);
+                const area = parseFloat(document.getElementById('form-area').value);
+                const condo = parseFloat(document.getElementById('form-condo').value) || 0;
+                const iptu = parseFloat(document.getElementById('form-iptu').value) || 0;
+                const bedrooms = parseInt(document.getElementById('form-bedrooms').value);
+                const photo = document.getElementById('form-photo').value;
+                const city = document.getElementById('form-city').value;
+                const neighborhood = document.getElementById('form-neighborhood').value;
+                const address = document.getElementById('form-address').value;
+                const building = document.getElementById('form-building').value;
+                const notes = document.getElementById('form-notes').value;
+                
+                // New Rating & User Fields
+                const ratingPrice = parseInt(document.getElementById('form-rating-price').value);
+                const ratingLocation = parseInt(document.getElementById('form-rating-location').value);
+                const ratingDeco = parseInt(document.getElementById('form-rating-deco').value);
+                const addedBy = document.getElementById('form-addedBy').value || 'Você';
+
+                const priceM2 = price / area;
+
+                Swal.fire({ title: 'Salvando...', text: 'Buscando coordenadas e enviando para a nuvem...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+                let lat = null, lng = null;
+                const geoQuery = address ? `${address}, ${city}, Brazil` : `${neighborhood}, ${city}, Brazil`;
+                try {
+                    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(geoQuery)}`);
+                    const data = await res.json();
+                    if(data && data.length > 0) {
+                        lat = parseFloat(data[0].lat);
+                        lng = parseFloat(data[0].lon);
+                    } else {
+                        lat = -14.235; lng = -51.925;
+                    }
+                } catch(e) {
+                    lat = -14.235; lng = -51.925;
+                }
+
+                const aptData = {
+                    title, link, price, area, condo, iptu, bedrooms, photo,
+                    city, neighborhood, address, building, notes, priceM2, lat, lng,
+                    ratingPrice, ratingLocation, ratingDeco, addedBy,
+                    dateAdded: new Date().toISOString()
+                };
+
+                try {
+                    if (!supabaseClient) throw new Error("Supabase indisponível.");
+
+                    if (this.state.editingId) {
+                        aptData.id = this.state.editingId;
+                        
+                        // Envia atualização (Update) para o Supabase
+                        const { error } = await supabaseClient.from('apartments').update(aptData).eq('id', this.state.editingId);
+                        if (error) throw error;
+
+                        const index = this.state.apartments.findIndex(a => a.id === this.state.editingId);
+                        if(index !== -1) {
+                            aptData.favorite = this.state.apartments[index].favorite;
+                            aptData.dateAdded = this.state.apartments[index].dateAdded;
+                            this.state.apartments[index] = aptData;
+                        }
+                        this.state.editingId = null;
+                        Swal.fire({icon: 'success', title: 'Atualizado!', text: 'Salvo com sucesso no banco de dados.', timer: 1500, showConfirmButton: false});
+                    } else {
+                        // Novo registro: Gera ID Universal (UUID)
+                        aptData.id = crypto.randomUUID(); 
+                        aptData.favorite = false;
+                        
+                        // Insere (Insert) no Supabase
+                        const { error } = await supabaseClient.from('apartments').insert([aptData]);
+                        if (error) throw error;
+
+                        this.state.apartments.unshift(aptData);
+                        Swal.fire({icon: 'success', title: 'Cadastrado!', text: 'Imóvel salvo na nuvem com sucesso.', timer: 1500, showConfirmButton: false});
+                    }
+                } catch (error) {
+                    console.error("Erro ao salvar no Supabase:", error);
+                    Swal.fire({icon: 'warning', title: 'Aviso', text: 'Salvo apenas localmente (Supabase offline).', timer: 2000, showConfirmButton: false});
+                    
+                    // Fallback Local
+                    if (this.state.editingId) {
+                        aptData.id = this.state.editingId;
+                        const index = this.state.apartments.findIndex(a => a.id === this.state.editingId);
+                        if(index !== -1) {
+                            aptData.favorite = this.state.apartments[index].favorite;
+                            aptData.dateAdded = this.state.apartments[index].dateAdded;
+                            this.state.apartments[index] = aptData;
+                        }
+                        this.state.editingId = null;
+                    } else {
+                        aptData.id = crypto.randomUUID(); 
+                        aptData.favorite = false;
+                        this.state.apartments.unshift(aptData);
+                    }
+                }
+
+                // Sempre salva localmente como backup contínuo
+                localStorage.setItem('meuAptoIdealData_v2', JSON.stringify(this.state.apartments));
+
+                this.navigate('list');
+            },
+
+            // --- VIEW: MAP ---
+            renderMap(container) {
+                container.innerHTML = `
+                    <div class="mb-4">
+                        <h1 class="text-2xl md:text-3xl font-bold text-slate-800"><i class="fa-solid fa-map-location-dot text-brand-600 mr-2"></i> Mapa de Imóveis</h1>
+                        <p class="text-slate-500 text-sm md:text-base mt-1">Visualize a localização de todos os apartamentos cadastrados.</p>
+                    </div>
+                    <div id="map" class="shadow-lg border border-slate-200"></div>
+                `;
+
+                let centerLat = -15.7801; 
+                let centerLng = -47.9292;
+                let zoom = 4;
+
+                if (this.state.apartments.length > 0) {
+                    const validApt = this.state.apartments.find(a => a.lat && a.lat !== -14.235);
+                    if (validApt) {
+                        centerLat = validApt.lat;
+                        centerLng = validApt.lng;
+                        zoom = 12;
+                    }
+                }
+
+                setTimeout(() => {
+                    this.state.mapInstance = L.map('map').setView([centerLat, centerLng], zoom);
+
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; OpenStreetMap contributors'
+                    }).addTo(this.state.mapInstance);
+
+                    const icon = L.divIcon({
+                        className: 'custom-div-icon',
+                        html: `<div class="bg-brand-600 text-white w-8 h-8 flex items-center justify-center rounded-full shadow-lg border-2 border-white"><i class="fa-solid fa-house text-sm"></i></div>`,
+                        iconSize: [32, 32],
+                        iconAnchor: [16, 32],
+                        popupAnchor: [0, -32]
+                    });
+
+                    let bounds = [];
+                    this.state.apartments.forEach(apt => {
+                        if (apt.lat && apt.lng) {
+                            const marker = L.marker([apt.lat, apt.lng], {icon: icon}).addTo(this.state.mapInstance);
+                            
+                            const avgRating = ((parseInt(apt.ratingPrice||3) + parseInt(apt.ratingLocation||3) + parseInt(apt.ratingDeco||3))/3).toFixed(1);
+
+                            const popupContent = `
+                                <div class="w-48 font-sans">
+                                    <img src="${apt.photo || 'https://via.placeholder.com/200x150'}" class="w-full h-24 object-cover rounded mb-2">
+                                    <div class="flex justify-between items-start mb-1">
+                                        <h4 class="font-bold text-sm text-slate-800 leading-tight">${apt.title}</h4>
+                                    </div>
+                                    <p class="text-brand-600 font-bold mb-1">${this.formatCurrency(apt.price)}</p>
+                                    <div class="text-[10px] text-amber-500 mb-2"><i class="fa-solid fa-star"></i> Média: ${avgRating}/5</div>
+                                    <p class="text-xs text-slate-500 mb-2 border-t border-slate-100 pt-2"><i class="fa-solid fa-bed"></i> ${apt.bedrooms} | <i class="fa-solid fa-ruler"></i> ${apt.area}m²</p>
+                                    <a href="${apt.link}" target="_blank" class="block w-full text-center bg-brand-500 hover:bg-brand-600 text-white text-xs py-1.5 rounded transition">Ver Anúncio</a>
+                                </div>
+                            `;
+                            marker.bindPopup(popupContent);
+                            bounds.push([apt.lat, apt.lng]);
+                        }
+                    });
+
+                    if (bounds.length > 0) {
+                        this.state.mapInstance.fitBounds(bounds, {padding: [50, 50]});
+                    }
+                }, 100);
+            },
+
+            // --- VIEW: COMPARE ---
+            renderCompare(container) {
+                if (this.state.compareList.length < 2) {
+                    container.innerHTML = `
+                        <div class="mb-6">
+                            <h1 class="text-2xl md:text-3xl font-bold text-slate-800"><i class="fa-solid fa-code-compare text-brand-600 mr-2"></i> Comparador</h1>
+                        </div>
+                        <div class="bg-white rounded-xl border border-slate-200 p-8 md:p-12 text-center shadow-sm">
+                            <i class="fa-solid fa-scale-balanced text-5xl md:text-6xl text-slate-300 mb-4"></i>
+                            <h3 class="text-xl font-bold text-slate-700">Selecione pelo menos 2 imóveis</h3>
+                            <p class="text-slate-500 mt-2">Vá até a lista e marque a caixa "Comparar" em dois ou mais apartamentos.</p>
+                            <button onclick="app.navigate('list')" class="mt-6 bg-brand-600 hover:bg-brand-700 text-white px-6 py-2.5 rounded-lg font-medium transition shadow-sm">Ir para Lista</button>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const apts = this.state.apartments.filter(a => this.state.compareList.includes(a.id));
+                
+                const minPrice = Math.min(...apts.map(a => a.price));
+                const minPriceM2 = Math.min(...apts.map(a => a.priceM2));
+                const maxArea = Math.max(...apts.map(a => a.area));
+                const bestRatingPrice = Math.max(...apts.map(a => a.ratingPrice || 1));
+                const bestRatingLoc = Math.max(...apts.map(a => a.ratingLocation || 1));
+                const bestRatingDeco = Math.max(...apts.map(a => a.ratingDeco || 1));
+
+                let html = `
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
+                        <div>
+                            <h1 class="text-2xl md:text-3xl font-bold text-slate-800"><i class="fa-solid fa-code-compare text-brand-600 mr-2"></i> Comparador Lado a Lado</h1>
+                            <p class="text-slate-500 mt-1 text-sm md:text-base">Comparando ${apts.length} imóveis. <span class="text-emerald-600 font-medium">Verde</span> indica o melhor valor.</p>
+                        </div>
+                        <button onclick="app.clearCompare()" class="text-sm text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-4 py-2 rounded-lg transition border border-red-100 font-medium w-full md:w-auto text-center">
+                            <i class="fa-solid fa-trash mr-1"></i> Limpar Tudo
+                        </button>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto custom-scrollbar">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr>
+                                    <th class="p-3 md:p-4 border-b border-r border-slate-200 bg-slate-50 min-w-[120px] md:min-w-[150px] sticky left-0 z-10 shadow-[1px_0_0_0_#e2e8f0]">Atributo</th>
+                                    ${apts.map(a => `
+                                        <th class="p-3 md:p-4 border-b border-slate-200 min-w-[240px] md:min-w-[280px] bg-white align-top">
+                                            <div class="relative">
+                                                <button onclick="app.toggleCompare('${a.id}'); app.renderCompare(document.getElementById('main-content'));" class="absolute -top-2 -right-2 w-6 h-6 bg-red-100 text-red-500 rounded-full flex items-center justify-center hover:bg-red-500 hover:text-white transition shadow-sm" title="Remover">
+                                                    <i class="fa-solid fa-xmark text-xs"></i>
+                                                </button>
+                                                <img src="${a.photo || 'https://via.placeholder.com/300x200'}" class="w-full h-24 md:h-32 object-cover rounded-lg mb-3 shadow-sm">
+                                                <h4 class="font-bold text-slate-800 text-sm line-clamp-2">${a.title}</h4>
+                                                <p class="text-xs text-slate-500 mt-1">${a.neighborhood}, ${a.city}</p>
+                                            </div>
+                                        </th>
+                                    `).join('')}
+                                </tr>
+                            </thead>
+                            <tbody class="text-sm divide-y divide-slate-100">
+                                <tr class="hover:bg-slate-50 bg-brand-50/20">
+                                    <td class="p-3 md:p-4 font-semibold text-slate-700 border-r border-slate-200 bg-slate-50 sticky left-0 z-10 shadow-[1px_0_0_0_#e2e8f0]">Preço (Total)</td>
+                                    ${apts.map(a => `<td class="p-3 md:p-4 font-bold text-base md:text-lg ${a.price === minPrice ? 'text-emerald-600 bg-emerald-50/50' : 'text-slate-800'}">${this.formatCurrency(a.price)}</td>`).join('')}
+                                </tr>
+                                <tr class="hover:bg-slate-50 bg-brand-50/20">
+                                    <td class="p-3 md:p-4 font-semibold text-slate-700 border-r border-slate-200 bg-slate-50 sticky left-0 z-10 shadow-[1px_0_0_0_#e2e8f0]">Preço / m²</td>
+                                    ${apts.map(a => `<td class="p-3 md:p-4 font-bold ${a.priceM2 === minPriceM2 ? 'text-emerald-600 bg-emerald-50/50' : 'text-slate-800'}">${this.formatCurrency(a.priceM2)}</td>`).join('')}
+                                </tr>
+                                <tr class="hover:bg-slate-50">
+                                    <td class="p-3 md:p-4 font-semibold text-slate-700 border-r border-slate-200 bg-slate-50 sticky left-0 z-10 shadow-[1px_0_0_0_#e2e8f0]">Área Útil</td>
+                                    ${apts.map(a => `<td class="p-3 md:p-4 ${a.area === maxArea ? 'text-emerald-600 font-bold bg-emerald-50/50' : 'text-slate-700'}">${a.area} m²</td>`).join('')}
+                                </tr>
+                                <tr class="hover:bg-slate-50">
+                                    <td class="p-3 md:p-4 font-semibold text-slate-700 border-r border-slate-200 bg-slate-50 sticky left-0 z-10 shadow-[1px_0_0_0_#e2e8f0]">Quartos</td>
+                                    ${apts.map(a => `<td class="p-3 md:p-4 text-slate-700">${a.bedrooms}</td>`).join('')}
+                                </tr>
+                                <tr class="hover:bg-slate-50">
+                                    <td class="p-3 md:p-4 font-semibold text-slate-700 border-r border-slate-200 bg-slate-50 sticky left-0 z-10 shadow-[1px_0_0_0_#e2e8f0]">Mensalidade</td>
+                                    ${apts.map(a => {
+                                        const iptuMensal = (a.iptu || 0) / 12;
+                                        const totalExtra = (a.condo || 0) + iptuMensal;
+                                        return `
+                                        <td class="p-3 md:p-4 text-slate-700">
+                                            <div>Cond: ${this.formatCurrency(a.condo)} <span class="text-xs text-slate-400">/mês</span></div>
+                                            <div>IPTU: ${this.formatCurrency(a.iptu)} <span class="text-xs text-slate-400">/ano</span></div>
+                                            <div class="font-semibold text-xs mt-1 border-t pt-1 border-slate-200 text-brand-700">Total extra: ${this.formatCurrency(totalExtra)} <span class="text-[10px] text-brand-600/70">/mês</span></div>
+                                        </td>
+                                        `;
+                                    }).join('')}
+                                </tr>
+                                
+                                <!-- Seção Avaliações Pessoais -->
+                                <tr>
+                                    <td colspan="${apts.length + 1}" class="bg-slate-100 p-2 font-bold text-xs text-slate-500 uppercase tracking-wider text-center sticky left-0">Suas Avaliações</td>
+                                </tr>
+                                <tr class="hover:bg-slate-50">
+                                    <td class="p-3 md:p-4 font-semibold text-slate-700 border-r border-slate-200 bg-slate-50 sticky left-0 z-10 shadow-[1px_0_0_0_#e2e8f0]"><i class="fa-solid fa-sack-dollar mr-1 text-slate-400"></i> Nota Preço</td>
+                                    ${apts.map(a => `<td class="p-3 md:p-4 ${a.ratingPrice === bestRatingPrice && a.ratingPrice > 1 ? 'bg-emerald-50/50' : ''}">${this.renderStars(a.ratingPrice||0)}</td>`).join('')}
+                                </tr>
+                                <tr class="hover:bg-slate-50">
+                                    <td class="p-3 md:p-4 font-semibold text-slate-700 border-r border-slate-200 bg-slate-50 sticky left-0 z-10 shadow-[1px_0_0_0_#e2e8f0]"><i class="fa-solid fa-map-pin mr-1 text-slate-400"></i> Nota Local</td>
+                                    ${apts.map(a => `<td class="p-3 md:p-4 ${a.ratingLocation === bestRatingLoc && a.ratingLocation > 1 ? 'bg-emerald-50/50' : ''}">${this.renderStars(a.ratingLocation||0)}</td>`).join('')}
+                                </tr>
+                                <tr class="hover:bg-slate-50">
+                                    <td class="p-3 md:p-4 font-semibold text-slate-700 border-r border-slate-200 bg-slate-50 sticky left-0 z-10 shadow-[1px_0_0_0_#e2e8f0]"><i class="fa-solid fa-couch mr-1 text-slate-400"></i> Nota Decoração</td>
+                                    ${apts.map(a => `<td class="p-3 md:p-4 ${a.ratingDeco === bestRatingDeco && a.ratingDeco > 1 ? 'bg-emerald-50/50' : ''}">${this.renderStars(a.ratingDeco||0)}</td>`).join('')}
+                                </tr>
+
+                                <tr class="hover:bg-slate-50 border-t-2 border-slate-100">
+                                    <td class="p-3 md:p-4 font-semibold text-slate-700 border-r border-slate-200 bg-slate-50 sticky left-0 z-10 shadow-[1px_0_0_0_#e2e8f0]">Cadastrado por</td>
+                                    ${apts.map(a => `<td class="p-3 md:p-4 text-slate-700 font-medium"><i class="fa-solid fa-user text-slate-400 mr-1 text-xs"></i> ${a.addedBy || 'Desconhecido'}</td>`).join('')}
+                                </tr>
+                                <tr class="hover:bg-slate-50">
+                                    <td class="p-3 md:p-4 font-semibold text-slate-700 border-r border-slate-200 bg-slate-50 sticky left-0 z-10 shadow-[1px_0_0_0_#e2e8f0]">Edifício</td>
+                                    ${apts.map(a => `<td class="p-3 md:p-4 text-slate-700 font-medium">${a.building || '-'}</td>`).join('')}
+                                </tr>
+                                <tr class="hover:bg-slate-50">
+                                    <td class="p-3 md:p-4 font-semibold text-slate-700 border-r border-slate-200 bg-slate-50 sticky left-0 z-10 shadow-[1px_0_0_0_#e2e8f0]">Endereço</td>
+                                    ${apts.map(a => `<td class="p-3 md:p-4 text-slate-600 text-xs">${a.address || '-'}</td>`).join('')}
+                                </tr>
+                                <tr class="hover:bg-slate-50">
+                                    <td class="p-3 md:p-4 font-semibold text-slate-700 border-r border-slate-200 bg-slate-50 sticky left-0 z-10 shadow-[1px_0_0_0_#e2e8f0]">Observações</td>
+                                    ${apts.map(a => `<td class="p-3 md:p-4 text-slate-600 text-xs italic bg-amber-50/20">${a.notes || '-'}</td>`).join('')}
+                                </tr>
+                                <tr>
+                                    <td class="p-3 md:p-4 border-r border-slate-200 bg-slate-50 sticky left-0 z-10 shadow-[1px_0_0_0_#e2e8f0]"></td>
+                                    ${apts.map(a => `
+                                        <td class="p-3 md:p-4 bg-slate-50">
+                                            <a href="${a.link}" target="_blank" class="block w-full text-center bg-brand-600 hover:bg-brand-700 text-white font-medium py-2 rounded-lg transition shadow-sm text-sm">
+                                                Ver Anúncio <i class="fa-solid fa-external-link-alt ml-1"></i>
+                                            </a>
+                                        </td>
+                                    `).join('')}
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+                container.innerHTML = html;
+            },
+
+            // --- UTILS & ACTIONS ---
+            formatCurrency(value) {
+                return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+            },
+
+            async toggleFavorite(id) {
+                const apt = this.state.apartments.find(a => a.id === id);
+                if(apt) {
+                    const newFavState = !apt.favorite;
+                    
+                    // Atualiza a tela primeiro (Otimista)
+                    apt.favorite = newFavState;
+                    localStorage.setItem('meuAptoIdealData_v2', JSON.stringify(this.state.apartments));
+
+                    if(this.state.view === 'favorites') this.renderList(document.getElementById('main-content'), true);
+                    else this.renderList(document.getElementById('main-content'), false);
+                    
+                    // Atualiza no banco silenciosamente
+                    try {
+                        if (supabaseClient) {
+                            await supabaseClient.from('apartments').update({ favorite: newFavState }).eq('id', id);
+                        }
+                    } catch(err) {
+                        console.error("Erro ao favoritar no banco", err);
+                    }
+                }
+            },
+
+            toggleCompare(id) {
+                const index = this.state.compareList.indexOf(id);
+                if (index > -1) {
+                    this.state.compareList.splice(index, 1);
+                } else {
+                    if (this.state.compareList.length >= 4) {
+                        Swal.fire({icon: 'warning', title: 'Limite Atingido', text: 'Você pode comparar no máximo 4 imóveis por vez.'});
+                        this.renderList(document.getElementById('main-content'), this.state.view === 'favorites');
+                        return;
+                    }
+                    this.state.compareList.push(id);
+                }
+                this.saveData();
+            },
+
+            clearCompare() {
+                this.state.compareList = [];
+                this.saveData();
+                this.renderCompare(document.getElementById('main-content'));
+            },
+
+            editApt(id) {
+                this.state.editingId = id;
+                this.navigate('form');
+            },
+
+            deleteApt(id) {
+                Swal.fire({
+                    title: 'Tem certeza?',
+                    text: "Esta ação apagará o registro!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ef4444',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: 'Sim, excluir!',
+                    cancelButtonText: 'Cancelar'
+                }).then(async (result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({ title: 'Excluindo...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                        
+                        try {
+                            if (supabaseClient) {
+                                const { error } = await supabaseClient.from('apartments').delete().eq('id', id);
+                                if (error) throw error;
+                            }
+                        } catch(err) {
+                            console.error("Erro ao excluir no Supabase", err);
+                        }
+
+                        // Executa a exclusão localmente de qualquer forma
+                        this.state.apartments = this.state.apartments.filter(a => a.id !== id);
+                        this.state.compareList = this.state.compareList.filter(c => c !== id);
+                        this.saveData(); // Atualiza fila de comparação local
+                        localStorage.setItem('meuAptoIdealData_v2', JSON.stringify(this.state.apartments));
+
+                        this.renderList(document.getElementById('main-content'), this.state.view === 'favorites');
+                        Swal.fire('Excluído!', 'O apartamento foi deletado.', 'success');
+                    }
+                })
+            },
+
+            applyFilters() {
+                this.state.filters = {
+                    searchTitle: document.getElementById('filter-title').value,
+                    maxPrice: document.getElementById('filter-maxPrice').value,
+                    bedrooms: document.getElementById('filter-bedrooms').value,
+                    city: document.getElementById('filter-city').value,
+                    neighborhood: document.getElementById('filter-neighborhood').value,
+                };
+                this.renderList(document.getElementById('main-content'), false);
+            },
+
+            clearFilters() {
+                this.state.filters = { maxPrice: '', bedrooms: '', city: '', neighborhood: '', searchTitle: '' };
+                document.getElementById('filter-title').value = '';
+                document.getElementById('filter-maxPrice').value = '';
+                document.getElementById('filter-bedrooms').value = '';
+                document.getElementById('filter-city').value = '';
+                document.getElementById('filter-neighborhood').value = '';
+                this.renderList(document.getElementById('main-content'), false);
+            },
+
+            handleSort(val) {
+                this.state.sortBy = val;
+                this.renderList(document.getElementById('main-content'), this.state.view === 'favorites');
+            },
+
+            // --- AI INTEGRATION ---
+            async openAIModal() {
+                const { value: text } = await Swal.fire({
+                    title: '<i class="fa-solid fa-wand-magic-sparkles text-brand-600"></i> Extração com IA',
+                    html: '<p class="text-sm text-slate-600 mb-2">Cole aqui abaixo todo o conteúdo que você copiou do anúncio.</p><textarea id="ai-text-input" class="w-full h-48 p-3 border border-slate-300 rounded-lg focus:ring-brand-500 focus:border-brand-500 outline-none resize-none text-sm" placeholder="Ex: Apartamento no Bairro Centro em Timbó com 3 Dormitórios (3 suítes) e 156 m²..."></textarea>',
+                    showCancelButton: true,
+                    confirmButtonText: 'Extrair Dados',
+                    cancelButtonText: 'Cancelar',
+                    confirmButtonColor: '#059669',
+                    preConfirm: () => {
+                        const input = document.getElementById('ai-text-input').value;
+                        if (!input) {
+                            Swal.showValidationMessage('Por favor, cole algum texto.');
+                        }
+                        return input;
+                    }
+                });
+
+                if (text) {
+                    this.processWithAI(text);
+                }
+            },
+
+            async processWithAI(rawText) {
+                Swal.fire({
+                    title: 'Analisando com IA...',
+                    html: 'Lendo o anúncio e extraindo as informações.<br>Isso pode levar alguns segundos.',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+
+                const apiKey = ""; 
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+                
+                const prompt = `Analise o seguinte texto de um anúncio imobiliário e extraia os dados solicitados.
+                Texto do anúncio:
+                """${rawText}"""`;
+
+                const payload = {
+                    contents: [{ parts: [{ text: prompt }] }],
+                    systemInstruction: { parts: [{ text: "Você é um corretor e analista de dados especialista em imóveis no Brasil. Analise o texto colado e preencha os dados requisitados. Retorne estritamente um JSON de acordo com o schema. Se uma informação não for encontrada no texto, retorne nulo ou vazio." }] },
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "OBJECT",
+                            properties: {
+                                title: { type: "STRING", description: "Um título atrativo, claro e curto para o imóvel" },
+                                price: { type: "NUMBER", description: "O valor principal de venda. Apenas o número (sem cifrão ou formatação). Se for 1.800.000,00 retorne 1800000" },
+                                area: { type: "NUMBER", description: "A área útil/privativa em m². Apenas o número." },
+                                condo: { type: "NUMBER", description: "O valor do condomínio mensal. Apenas número." },
+                                iptu: { type: "NUMBER", description: "O valor do IPTU anual. Apenas número." },
+                                bedrooms: { type: "NUMBER", description: "A quantidade de quartos/dormitórios do imóvel. Apenas número." },
+                                city: { type: "STRING", description: "O nome da cidade do imóvel." },
+                                neighborhood: { type: "STRING", description: "O bairro onde o imóvel está localizado." },
+                                address: { type: "STRING", description: "O endereço (rua, avenida) se estiver disponível." },
+                                building: { type: "STRING", description: "O nome do edifício, residencial ou condomínio, se for mencionado (Ex: Edifício Bella Vista, Residencial Timbó)." },
+                                notes: { type: "STRING", description: "Um resumo descritivo em texto destacando as principais características, móveis, áreas de lazer, infraestrutura e observações importantes." }
+                            }
+                        }
+                    }
+                };
+
+                let attempt = 0;
+                const maxAttempts = 5;
+                const delays = [1000, 2000, 4000, 8000, 16000];
+
+                while (attempt < maxAttempts) {
+                    try {
+                        const response = await fetch(url, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify(payload)
+                        });
+
+                        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                        
+                        const result = await response.json();
+                        const textData = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                        
+                        if (textData) {
+                            const data = JSON.parse(textData);
+                            this.fillFormWithAI(data);
+                            Swal.fire({ icon: 'success', title: 'Sucesso!', text: 'Os dados foram extraídos e preenchidos automaticamente. Revise-os antes de salvar.', timer: 3000, showConfirmButton: true, confirmButtonColor: '#059669' });
+                            return;
+                        } else {
+                            throw new Error("Resposta vazia da IA");
+                        }
+                    } catch (error) {
+                        attempt++;
+                        if (attempt >= maxAttempts) {
+                            Swal.fire({ icon: 'error', title: 'Ops!', text: 'Não foi possível extrair os dados usando a IA neste momento. Tente preencher manualmente.' });
+                            return;
+                        }
+                        await new Promise(res => setTimeout(res, delays[attempt - 1]));
+                    }
+                }
+            },
+
+            fillFormWithAI(data) {
+                if (data.title) document.getElementById('form-title').value = data.title;
+                if (data.price !== undefined) document.getElementById('form-price').value = data.price;
+                if (data.area !== undefined) document.getElementById('form-area').value = data.area;
+                if (data.condo !== undefined) document.getElementById('form-condo').value = data.condo;
+                if (data.iptu !== undefined) document.getElementById('form-iptu').value = data.iptu;
+                if (data.bedrooms !== undefined) document.getElementById('form-bedrooms').value = data.bedrooms;
+                if (data.city) document.getElementById('form-city').value = data.city;
+                if (data.neighborhood) document.getElementById('form-neighborhood').value = data.neighborhood;
+                if (data.address) document.getElementById('form-address').value = data.address;
+                if (data.building) document.getElementById('form-building').value = data.building;
+                if (data.notes) document.getElementById('form-notes').value = data.notes;
+            },
+
+            getSampleData() {
+                return [
+                    {
+                        id: "1", title: "Lindo Apto 2 quartos em Pinheiros", link: "https://exemplo.com", price: 650000, condo: 550, iptu: 120, city: "São Paulo", neighborhood: "Pinheiros", address: "Rua Teodoro Sampaio, 1000", photo: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80", bedrooms: 2, area: 65, priceM2: 10000, notes: "Bem localizado, perto do metrô. Precisa reformar a cozinha.", lat: -23.5645, lng: -46.6834, favorite: true, ratingPrice: 4, ratingLocation: 5, ratingDeco: 2, addedBy: "João Silva", dateAdded: new Date(Date.now() - 86400000).toISOString()
+                    },
+                    {
+                        id: "2", title: "Apartamento com Varanda Gourmet", link: "https://exemplo.com", price: 850000, condo: 800, iptu: 200, city: "São Paulo", neighborhood: "Vila Mariana", address: "Rua Domingos de Morais", photo: "https://images.unsplash.com/photo-1502672260266-1c1e5240980c?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80", bedrooms: 3, area: 90, priceM2: 9444.44, notes: "Prédio novo com piscina e academia. Sol da tarde.", lat: -23.5891, lng: -46.6341, favorite: false, ratingPrice: 3, ratingLocation: 4, ratingDeco: 5, addedBy: "Maria Clara", dateAdded: new Date().toISOString()
+                    },
+                    {
+                        id: "3", title: "Kitnet mobiliada no Centro", link: "https://exemplo.com", price: 280000, condo: 300, iptu: 50, city: "São Paulo", neighborhood: "Centro Histórico", address: "Av. Ipiranga", photo: "https://images.unsplash.com/photo-1493809842364-78817add7ffb?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80", bedrooms: 1, area: 35, priceM2: 8000, notes: "Ótimo para investir e alugar. Sem garagem.", lat: -23.5432, lng: -46.6417, favorite: false, ratingPrice: 5, ratingLocation: 3, ratingDeco: 4, addedBy: "João Silva", dateAdded: new Date(Date.now() - 172800000).toISOString()
+                    }
+                ];
+            }
+        };
+
+        // Initialize App on load
+        document.addEventListener('DOMContentLoaded', () => {
+            app.init();
+        });
+    </script>
+</body>
+</html>
