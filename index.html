@@ -78,13 +78,14 @@
     <!-- Navbar Superior -->
     <nav class="bg-brand-700 text-white shadow-lg sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between md:justify-start h-16 overflow-x-auto custom-scrollbar items-center">
+            <div class="flex justify-between items-center h-16 w-full">
+                <!-- Esquerda: Logo e Título -->
                 <div class="flex items-center cursor-pointer md:mr-8 shrink-0" onclick="app.navigate('list')">
                     <i class="fa-solid fa-building text-2xl mr-2 text-brand-200"></i>
                     <span class="font-bold text-xl tracking-tight">Meu Apto Ideal</span>
                 </div>
                 
-                <!-- Desktop Menu -->
+                <!-- Centro/Direita: Desktop Menu -->
                 <div class="hidden md:flex items-center space-x-1 shrink-0" id="nav-links">
                     <button onclick="app.navigate('list')" class="nav-btn px-3 py-2 rounded-md text-sm font-medium hover:bg-brand-600 transition" data-target="list">
                         <i class="fa-solid fa-list mr-1"></i> Lista
@@ -95,10 +96,6 @@
                     <button onclick="app.navigate('map')" class="nav-btn px-3 py-2 rounded-md text-sm font-medium hover:bg-brand-600 transition" data-target="map">
                         <i class="fa-solid fa-map-location-dot mr-1"></i> Mapa
                     </button>
-                    <button onclick="app.navigate('compare')" class="nav-btn px-3 py-2 rounded-md text-sm font-medium hover:bg-brand-600 transition relative" data-target="compare">
-                        <i class="fa-solid fa-code-compare mr-1"></i> Comparar
-                        <span id="compare-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center hidden shadow-sm">0</span>
-                    </button>
                     <button onclick="app.navigate('favorites')" class="nav-btn px-3 py-2 rounded-md text-sm font-medium hover:bg-brand-600 transition" data-target="favorites">
                         <i class="fa-solid fa-heart mr-1"></i> Favoritos
                     </button>
@@ -106,34 +103,40 @@
                         <i class="fa-solid fa-plus mr-1"></i> Adicionar
                     </button>
                 </div>
+
+                <!-- Direita: Mobile Favoritos -->
+                <div class="md:hidden shrink-0 flex items-center pr-1">
+                    <button onclick="app.navigate('favorites')" class="text-brand-100 hover:text-white p-2 transition-colors nav-btn-mobile relative" data-target="favorites">
+                        <i class="fa-solid fa-heart text-2xl"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </nav>
 
-    <!-- Bottom Navigation (Mobile Only) -->
-    <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around items-center h-16 z-50 pb-safe shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] px-1 overflow-x-auto custom-scrollbar">
-        <button onclick="app.navigate('list')" class="nav-btn-mobile flex-1 min-w-[60px] flex flex-col items-center justify-center text-slate-500 hover:text-brand-600 h-full transition-colors" data-target="list">
+    <!-- Bottom Navigation (Mobile Only) - Apenas 4 botões e 1 invisível p/ balancear o "+" no centro -->
+    <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around items-center h-16 z-50 pb-safe shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] px-1">
+        <button onclick="app.navigate('list')" class="nav-btn-mobile flex-1 flex flex-col items-center justify-center text-slate-500 hover:text-brand-600 h-full transition-colors" data-target="list">
             <i class="fa-solid fa-list text-lg mb-1"></i><span class="text-[10px] font-medium">Lista</span>
         </button>
-        <button onclick="app.navigate('kanban')" class="nav-btn-mobile flex-1 min-w-[60px] flex flex-col items-center justify-center text-slate-500 hover:text-brand-600 h-full transition-colors" data-target="kanban">
+        <button onclick="app.navigate('kanban')" class="nav-btn-mobile flex-1 flex flex-col items-center justify-center text-slate-500 hover:text-brand-600 h-full transition-colors" data-target="kanban">
             <i class="fa-solid fa-table-columns text-lg mb-1"></i><span class="text-[10px] font-medium">Funil</span>
         </button>
         
         <!-- Botão Adicionar Flutuante -->
-        <button onclick="app.navigate('form')" class="nav-btn-mobile relative flex-1 min-w-[60px] flex flex-col items-center justify-center h-full group" data-target="form">
-            <div class="absolute -top-6 bg-brand-600 text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg border-[3px] border-slate-50 group-hover:scale-105 transition-transform duration-200">
-                <i class="fa-solid fa-plus text-xl"></i>
+        <button onclick="app.navigate('form')" class="nav-btn-mobile relative flex-[1.2] flex flex-col items-center justify-center h-full group" data-target="form">
+            <div class="absolute -top-6 bg-brand-600 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg border-[4px] border-slate-50 group-hover:scale-105 transition-transform duration-200">
+                <i class="fa-solid fa-plus text-2xl"></i>
             </div>
             <span class="text-[10px] mt-8 text-brand-600 font-bold opacity-0 transition-opacity">Novo</span>
         </button>
         
-        <button onclick="app.navigate('map')" class="nav-btn-mobile flex-1 min-w-[60px] flex flex-col items-center justify-center text-slate-500 hover:text-brand-600 h-full transition-colors" data-target="map">
+        <button onclick="app.navigate('map')" class="nav-btn-mobile flex-1 flex flex-col items-center justify-center text-slate-500 hover:text-brand-600 h-full transition-colors" data-target="map">
             <i class="fa-solid fa-map-location-dot text-lg mb-1"></i><span class="text-[10px] font-medium">Mapa</span>
         </button>
-        <button onclick="app.navigate('compare')" class="nav-btn-mobile flex-1 min-w-[60px] flex flex-col items-center justify-center text-slate-500 hover:text-brand-600 h-full relative transition-colors" data-target="compare">
-            <i class="fa-solid fa-code-compare text-lg mb-1"></i><span class="text-[10px] font-medium">Compara</span>
-            <span id="compare-badge-mobile" class="absolute top-1 right-1 bg-red-500 text-white text-[9px] font-bold rounded-full h-4 w-4 flex items-center justify-center hidden shadow-sm">0</span>
-        </button>
+        
+        <!-- Placeholder fantasma para balancear espaço já que são 4 itens visíveis e o flutuante precisa parecer centralizado visualmente. -->
+        <div class="flex-1"></div> 
     </div>
 
     <!-- Main Content Area -->
@@ -163,11 +166,12 @@
             console.warn("Supabase URL inválida. O aplicativo rodará em modo local.");
         }
 
+        const STATUS_OPTIONS = ['Novo', 'Visita Agendada', 'Visitado', 'Proposta', 'Descartado'];
+
         const app = {
             state: {
                 view: 'list',
                 apartments: [],
-                compareList: [],
                 filters: { searchTitle: '', neighborhood: '', building: '' },
                 sortBy: 'dateDesc',
                 editingId: null,
@@ -212,32 +216,8 @@
                         this.state.apartments = this.getSampleData();
                     }
                 }
-
-                const compareData = localStorage.getItem('meuAptoIdealCompare');
-                if(compareData) this.state.compareList = JSON.parse(compareData);
-                this.updateCompareBadge();
                 
                 Swal.close();
-            },
-
-            saveData() {
-                localStorage.setItem('meuAptoIdealCompare', JSON.stringify(this.state.compareList));
-                this.updateCompareBadge();
-            },
-
-            updateCompareBadge() {
-                const badgeDesktop = document.getElementById('compare-badge');
-                const badgeMobile = document.getElementById('compare-badge-mobile');
-                
-                if(this.state.compareList.length > 0) {
-                    badgeDesktop.textContent = this.state.compareList.length;
-                    badgeMobile.textContent = this.state.compareList.length;
-                    badgeDesktop.classList.remove('hidden');
-                    badgeMobile.classList.remove('hidden');
-                } else {
-                    badgeDesktop.classList.add('hidden');
-                    badgeMobile.classList.add('hidden');
-                }
             },
 
             navigate(view) {
@@ -262,9 +242,19 @@
                     if(btn.dataset.target === view && view !== 'form') {
                         btn.classList.add('text-brand-600');
                         btn.classList.remove('text-slate-500');
+                        // Para o topo (Favoritos)
+                        if(btn.classList.contains('text-brand-100')) {
+                            btn.classList.remove('text-brand-100');
+                            btn.classList.add('text-white');
+                        }
                     } else {
                         btn.classList.remove('text-brand-600');
                         btn.classList.add('text-slate-500');
+                        // Para o topo (Favoritos)
+                        if(btn.dataset.target === 'favorites') {
+                            btn.classList.remove('text-white');
+                            btn.classList.add('text-brand-100');
+                        }
                     }
                 });
 
@@ -279,11 +269,15 @@
                     case 'favorites': this.renderList(content, true); break;
                     case 'form': this.renderForm(content); break;
                     case 'map': this.renderMap(content); break;
-                    case 'compare': this.renderCompare(content); break;
                     case 'kanban': this.renderKanban(content); break;
                 }
                 
                 window.scrollTo(0,0);
+            },
+
+            // --- UTILS & ACTIONS ---
+            formatCurrency(value) {
+                return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
             },
 
             renderStars(rating) {
@@ -300,9 +294,87 @@
                     case 'Visita Agendada': return 'bg-amber-100 text-amber-700 border-amber-200';
                     case 'Visitado': return 'bg-purple-100 text-purple-700 border-purple-200';
                     case 'Proposta': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
-                    case 'Descartado': return 'bg-slate-100 text-slate-600 border-slate-200 line-through opacity-70';
+                    case 'Descartado': return 'bg-slate-200 text-slate-500 border-slate-300';
                     default: return 'bg-gray-100 text-gray-700';
                 }
+            },
+
+            async toggleFavorite(id) {
+                const apt = this.state.apartments.find(a => a.id === id);
+                if(apt) {
+                    const newFavState = !apt.favorite;
+                    apt.favorite = newFavState;
+                    localStorage.setItem('meuAptoIdealData_v2', JSON.stringify(this.state.apartments));
+
+                    if(this.state.view === 'favorites') this.renderList(document.getElementById('main-content'), true);
+                    else if(this.state.view === 'list') this.renderList(document.getElementById('main-content'), false);
+                    else if(this.state.view === 'kanban') this.renderKanban(document.getElementById('main-content'));
+                    
+                    try {
+                        if (supabaseClient) {
+                            await supabaseClient.from('apartments').update({ favorite: newFavState }).eq('id', id);
+                        }
+                    } catch(err) {
+                        console.error("Erro ao favoritar no banco", err);
+                    }
+                }
+            },
+
+            editApt(id) {
+                this.state.editingId = id;
+                this.navigate('form');
+            },
+
+            deleteApt(id) {
+                Swal.fire({
+                    title: 'Tem certeza?',
+                    text: "Esta ação apagará o registro definitivamente!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ef4444',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: 'Sim, excluir!',
+                    cancelButtonText: 'Cancelar'
+                }).then(async (result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({ title: 'Excluindo...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                        
+                        try {
+                            if (supabaseClient) {
+                                const { error } = await supabaseClient.from('apartments').delete().eq('id', id);
+                                if (error) throw error;
+                            }
+                        } catch(err) {
+                            console.error("Erro ao excluir no Supabase", err);
+                        }
+
+                        this.state.apartments = this.state.apartments.filter(a => a.id !== id);
+                        localStorage.setItem('meuAptoIdealData_v2', JSON.stringify(this.state.apartments));
+
+                        if(this.state.view === 'favorites') this.renderList(document.getElementById('main-content'), true);
+                        else if(this.state.view === 'kanban') this.renderKanban(document.getElementById('main-content'));
+                        else this.renderList(document.getElementById('main-content'), false);
+
+                        Swal.fire('Excluído!', 'O apartamento foi deletado com sucesso.', 'success');
+                    }
+                })
+            },
+
+            applyFilters() {
+                this.state.filters = {
+                    searchTitle: document.getElementById('filter-title').value,
+                    neighborhood: document.getElementById('filter-neighborhood').value,
+                    building: document.getElementById('filter-building').value,
+                };
+                this.renderList(document.getElementById('main-content'), false);
+            },
+
+            clearFilters() {
+                this.state.filters = { searchTitle: '', neighborhood: '', building: '' };
+                document.getElementById('filter-title').value = '';
+                document.getElementById('filter-neighborhood').value = '';
+                document.getElementById('filter-building').value = '';
+                this.renderList(document.getElementById('main-content'), false);
             },
 
             // --- VIEW: LIST / FAVORITES ---
@@ -352,7 +424,7 @@
                                 </div>
 
                                 <div class="flex gap-2 pt-1">
-                                    <button onclick="app.applyFilters()" class="flex-1 flex justify-center items-center text-white bg-brand-600 hover:bg-brand-700 focus:ring-4 focus:ring-brand-300 font-medium rounded-lg text-sm px-3 py-2.5 transition shadow-sm">
+                                    <button onclick="app.applyFilters()" class="flex-1 flex justify-center items-center text-white bg-brand-600 hover:bg-brand-700 font-medium rounded-lg text-sm px-3 py-2.5 transition shadow-sm">
                                         <i class="fa-solid fa-check mr-1.5"></i> Filtrar
                                     </button>
                                     <button onclick="app.clearFilters()" class="flex-1 flex justify-center items-center text-brand-700 bg-brand-50 hover:bg-brand-100 border border-brand-200 font-medium rounded-lg text-sm px-3 py-2.5 transition">
@@ -403,16 +475,19 @@
                 let cardsHtml = `<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">`;
                 
                 filtered.forEach(apt => {
-                    const isCompared = this.state.compareList.includes(apt.id);
+                    const statusClass = this.getStatusColor(apt.status);
+                    const isDiscarded = apt.status === 'Descartado';
+                    const discardedStyles = isDiscarded ? 'opacity-50 grayscale hover:opacity-75 bg-slate-50' : 'bg-white';
+                    
                     cardsHtml += `
-                        <div class="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col relative group cursor-pointer" onclick="app.viewApt('${apt.id}')">
+                        <div class="rounded-xl border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col relative group cursor-pointer ${discardedStyles}" onclick="app.viewApt('${apt.id}')">
                             <div class="h-44 md:h-48 bg-slate-200 relative overflow-hidden">
                                 <img src="${apt.photo || 'https://via.placeholder.com/400x300?text=Sem+Foto'}" alt="${apt.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
                                 
                                 <button onclick="event.stopPropagation(); app.toggleFavorite('${apt.id}')" class="absolute top-3 right-3 h-10 w-10 bg-white/90 backdrop-blur rounded-full flex items-center justify-center text-xl shadow-sm active:scale-95 md:hover:scale-110 md:hover:bg-white transition text-${apt.favorite ? 'red-500' : 'slate-400'}">
                                     <i class="fa-${apt.favorite ? 'solid' : 'regular'} fa-heart"></i>
                                 </button>
-                                <div class="absolute top-3 left-3 px-2.5 py-1 rounded-md text-xs font-bold shadow-sm border ${this.getStatusColor(apt.status)}">
+                                <div class="absolute top-3 left-3 px-2.5 py-1 rounded-md text-xs font-bold shadow-sm border ${statusClass}">
                                     ${apt.status || 'Novo'}
                                 </div>
                                 <div class="absolute bottom-3 left-3 bg-brand-600/95 backdrop-blur text-white px-3 py-1.5 rounded-lg text-sm md:text-base font-bold shadow-lg border border-white/20">
@@ -425,7 +500,6 @@
                                 ${apt.building ? `<p class="text-sm text-brand-700 font-semibold mb-1"><i class="fa-regular fa-building mr-1"></i> ${apt.building}</p>` : ''}
                                 <p class="text-sm text-slate-500 mb-3 flex items-center"><i class="fa-solid fa-location-dot w-4 text-center mr-1 text-slate-400"></i> ${apt.neighborhood}, ${apt.city}</p>
                                 
-                                <!-- Características Extras (Andar e Sol) -->
                                 <div class="flex gap-2 mb-3">
                                     ${apt.floor ? `<span class="bg-slate-100 text-slate-600 text-[10px] px-2 py-1 rounded font-medium"><i class="fa-solid fa-stairs mr-1"></i> ${apt.floor}</span>` : ''}
                                     ${apt.sunOrientation ? `<span class="bg-amber-50 text-amber-700 text-[10px] px-2 py-1 rounded font-medium"><i class="fa-regular fa-sun mr-1"></i> Sol: ${apt.sunOrientation}</span>` : ''}
@@ -447,13 +521,7 @@
                                 </div>
 
                                 <div class="mt-auto pt-1">
-                                    <div class="flex justify-between items-center border-t border-slate-100 pt-3">
-                                        <label class="flex items-center space-x-2 cursor-pointer group/chk py-1" onclick="event.stopPropagation()">
-                                            <input type="checkbox" class="w-5 h-5 rounded border-slate-300 text-brand-600 focus:ring-brand-500 transition" 
-                                                onchange="app.toggleCompare('${apt.id}')" ${isCompared ? 'checked' : ''}>
-                                            <span class="text-sm font-medium text-slate-600 group-hover/chk:text-brand-600">Comparar</span>
-                                        </label>
-                                        
+                                    <div class="flex justify-end items-center border-t border-slate-100 pt-3">
                                         <div class="flex space-x-1.5">
                                             <a href="${apt.link}" target="_blank" onclick="event.stopPropagation()" class="w-9 h-9 rounded-md bg-slate-100 flex items-center justify-center text-slate-600 active:bg-brand-100 md:hover:bg-brand-100 active:text-brand-700 md:hover:text-brand-700 transition" title="Ver Anúncio">
                                                 <i class="fa-solid fa-arrow-up-right-from-square text-sm"></i>
@@ -505,8 +573,11 @@
                     `;
 
                     aptsInStatus.forEach(apt => {
+                        const isDiscarded = status === 'Descartado';
+                        const discardedStyles = isDiscarded ? 'opacity-50 grayscale hover:opacity-75 bg-slate-50' : 'bg-white hover:border-brand-300';
+                        
                         html += `
-                            <div class="kanban-card bg-white p-3 rounded-lg shadow-sm border border-slate-200 hover:border-brand-300 hover:shadow-md transition active:scale-[0.98]" 
+                            <div class="kanban-card p-3 rounded-lg shadow-sm border border-slate-200 hover:shadow-md transition active:scale-[0.98] ${discardedStyles}" 
                                  draggable="true" 
                                  ondragstart="app.dragStart(event, '${apt.id}')"
                                  onclick="app.viewApt('${apt.id}')">
@@ -536,7 +607,7 @@
                 ev.target.style.opacity = "0.5";
             },
             allowDrop(ev) {
-                ev.preventDefault(); // Necessário para permitir o drop
+                ev.preventDefault(); 
             },
             async dropOnKanban(ev, newStatus) {
                 ev.preventDefault();
@@ -548,9 +619,8 @@
                 
                 if (apt && apt.status !== newStatus) {
                     apt.status = newStatus;
-                    this.renderKanban(document.getElementById('main-content')); // Re-render imediato (Otimista)
+                    this.renderKanban(document.getElementById('main-content')); 
                     
-                    // Salva no banco
                     localStorage.setItem('meuAptoIdealData_v2', JSON.stringify(this.state.apartments));
                     try {
                         if (supabaseClient) {
@@ -566,13 +636,20 @@
                 if (!apt) return;
 
                 const avgRating = ((parseInt(apt.ratingPrice||3) + parseInt(apt.ratingLocation||3) + parseInt(apt.ratingDeco||3))/3).toFixed(1);
+                const statusClass = this.getStatusColor(apt.status);
 
                 document.getElementById('modal-content-inject').innerHTML = `
                     <div class="h-48 md:h-64 w-full relative bg-slate-200 shrink-0">
                         <img src="${apt.photo || 'https://via.placeholder.com/800x600?text=Sem+Foto'}" class="w-full h-full object-cover" alt="Foto">
+                        
+                        <div class="absolute top-3 left-3">
+                            <span class="${statusClass} text-xs px-3 py-1.5 rounded-lg font-bold shadow-md border uppercase tracking-wide">${apt.status || 'Novo'}</span>
+                        </div>
+
                         <button onclick="app.closeModal(event)" class="absolute top-4 right-4 bg-white/90 backdrop-blur w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center text-slate-800 hover:bg-white shadow-lg transition z-10">
                             <i class="fa-solid fa-xmark text-lg md:text-xl"></i>
                         </button>
+                        
                         <div class="absolute bottom-4 left-4 right-4 flex flex-col md:flex-row gap-2 items-start md:items-end pointer-events-none">
                             <div class="bg-brand-600 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-bold shadow-lg text-base md:text-lg border border-white/20 pointer-events-auto">
                                 ${this.formatCurrency(apt.price)}
@@ -584,51 +661,27 @@
                     </div>
 
                     <div class="p-4 md:p-6 flex-grow">
-                        <div class="flex justify-between items-start mb-2">
-                            <h2 class="text-lg md:text-xl font-bold text-slate-800 leading-tight">${apt.title}</h2>
-                        </div>
-                        
+                        <h2 class="text-lg md:text-xl font-bold text-slate-800 leading-tight mb-2">${apt.title}</h2>
                         ${apt.building ? `<p class="text-brand-700 font-semibold mb-2 text-sm"><i class="fa-regular fa-building mr-1"></i> Edifício: ${apt.building}</p>` : ''}
                         <p class="text-slate-500 mb-5 text-xs md:text-sm"><i class="fa-solid fa-location-dot mr-1 text-slate-400"></i> ${apt.address ? apt.address + ' - ' : ''}${apt.neighborhood}, ${apt.city}</p>
 
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 md:gap-3 mb-6">
-                            <div class="bg-slate-50 p-2 md:p-3 rounded-xl border border-slate-100 flex flex-col items-center justify-center">
-                                <p class="text-[9px] md:text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">Área Útil</p>
-                                <p class="font-bold text-slate-800 text-sm md:text-base"><i class="fa-solid fa-ruler-combined text-brand-500 mr-1.5 opacity-70"></i>${apt.area} m²</p>
-                            </div>
-                            <div class="bg-slate-50 p-2 md:p-3 rounded-xl border border-slate-100 flex flex-col items-center justify-center">
-                                <p class="text-[9px] md:text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">Quartos</p>
-                                <p class="font-bold text-slate-800 text-sm md:text-base"><i class="fa-solid fa-bed text-brand-500 mr-1.5 opacity-70"></i>${apt.bedrooms}</p>
-                            </div>
-                            <div class="bg-slate-50 p-2 md:p-3 rounded-xl border border-slate-100 flex flex-col items-center justify-center">
-                                <p class="text-[9px] md:text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">Condomínio</p>
-                                <p class="font-bold text-slate-800 text-xs md:text-sm">${this.formatCurrency(apt.condo)}</p>
-                            </div>
-                            <div class="bg-slate-50 p-2 md:p-3 rounded-xl border border-slate-100 flex flex-col items-center justify-center">
-                                <p class="text-[9px] md:text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">IPTU/Ano</p>
-                                <p class="font-bold text-slate-800 text-xs md:text-sm">${this.formatCurrency(apt.iptu)}</p>
-                            </div>
-                            ${apt.floor ? `
-                            <div class="bg-slate-50 p-2 md:p-3 rounded-xl border border-slate-100 flex flex-col items-center justify-center">
-                                <p class="text-[9px] md:text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">Andar</p>
-                                <p class="font-bold text-slate-800 text-xs md:text-sm"><i class="fa-solid fa-stairs text-brand-500 mr-1 opacity-70"></i>${apt.floor}</p>
-                            </div>` : ''}
-                            ${apt.sunOrientation ? `
-                            <div class="bg-slate-50 p-2 md:p-3 rounded-xl border border-slate-100 flex flex-col items-center justify-center">
-                                <p class="text-[9px] md:text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">Orientação Sol</p>
-                                <p class="font-bold text-slate-800 text-xs md:text-sm"><i class="fa-regular fa-sun text-amber-500 mr-1 opacity-70"></i>${apt.sunOrientation}</p>
-                            </div>` : ''}
+                        <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 md:gap-3 mb-6">
+                            <div class="col-span-1 bg-slate-50 p-2 rounded-xl border border-slate-100 flex flex-col items-center text-center justify-center"><p class="text-[9px] text-slate-500 uppercase font-bold mb-1">Área Útil</p><p class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-ruler text-brand-500 mr-1 opacity-70"></i>${apt.area}m²</p></div>
+                            <div class="col-span-1 bg-slate-50 p-2 rounded-xl border border-slate-100 flex flex-col items-center text-center justify-center"><p class="text-[9px] text-slate-500 uppercase font-bold mb-1">Quartos</p><p class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-bed text-brand-500 mr-1 opacity-70"></i>${apt.bedrooms}</p></div>
+                            <div class="col-span-1 bg-slate-50 p-2 rounded-xl border border-slate-100 flex flex-col items-center text-center justify-center"><p class="text-[9px] text-slate-500 uppercase font-bold mb-1">Andar</p><p class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-layer-group text-brand-500 mr-1 opacity-70"></i>${apt.floor || '-'}</p></div>
+                            <div class="col-span-1 bg-slate-50 p-2 rounded-xl border border-slate-100 flex flex-col items-center text-center justify-center"><p class="text-[9px] text-slate-500 uppercase font-bold mb-1">Sol</p><p class="font-bold text-slate-800 text-xs md:text-sm"><i class="fa-solid fa-sun text-amber-500 mr-1 opacity-70"></i>${apt.sunOrientation || '-'}</p></div>
+                            <div class="col-span-1 bg-slate-50 p-2 rounded-xl border border-slate-100 flex flex-col items-center text-center justify-center"><p class="text-[9px] text-slate-500 uppercase font-bold mb-1">Condomínio</p><p class="font-bold text-slate-800 text-xs">${this.formatCurrency(apt.condo)}</p></div>
+                            <div class="col-span-1 bg-slate-50 p-2 rounded-xl border border-slate-100 flex flex-col items-center text-center justify-center"><p class="text-[9px] text-slate-500 uppercase font-bold mb-1">IPTU/Ano</p><p class="font-bold text-slate-800 text-xs">${this.formatCurrency(apt.iptu)}</p></div>
                         </div>
 
                         <!-- Walk Score / POIs -->
-                        <div class="mb-6">
-                            <div class="flex justify-between items-center border-b border-slate-100 pb-1.5 mb-2">
-                                <h3 class="font-bold text-slate-800 text-sm md:text-base"><i class="fa-solid fa-map-location-dot text-brand-500 mr-1.5"></i> Região (Radar 1km)</h3>
-                                <button onclick="app.loadPOIs(${apt.lat}, ${apt.lng})" class="text-xs font-bold text-brand-600 bg-brand-50 hover:bg-brand-100 px-3 py-1.5 rounded-lg transition" id="btn-load-pois">Explorar Radar</button>
+                        <div class="mb-6 bg-blue-50/50 p-3 md:p-4 rounded-xl border border-blue-100">
+                            <div class="flex justify-between items-center mb-2">
+                                <h3 class="font-bold text-blue-900 text-sm"><i class="fa-solid fa-person-walking text-blue-600 mr-1.5"></i> Radar de Comodidades (1km)</h3>
+                                <button onclick="app.loadPOIs(${apt.lat}, ${apt.lng})" class="text-[10px] md:text-xs bg-white text-blue-700 border border-blue-200 px-2 py-1 rounded-lg font-bold hover:bg-blue-50 transition shadow-sm" id="btn-load-pois">Explorar Radar</button>
                             </div>
-                            <div id="poi-container" class="hidden grid-cols-2 sm:grid-cols-4 gap-2">
-                                <!-- Preenchido dinamicamente -->
-                            </div>
+                            <p class="text-xs text-blue-600/70 mb-2 leading-tight">Consulta em tempo real mercados, farmácias, ginásios e parques no raio de 1.000m.</p>
+                            <div id="poi-container" class="hidden grid-cols-2 sm:grid-cols-4 gap-2"></div>
                         </div>
 
                         <div class="mb-6">
@@ -687,7 +740,6 @@
                 btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Buscando...';
                 btn.disabled = true;
 
-                // Consulta otimizada do OpenStreetMap (Raio 1000m)
                 const query = `
                     [out:json][timeout:15];
                     (
@@ -744,7 +796,7 @@
                     `;
                     container.classList.remove('hidden');
                     container.classList.add('grid');
-                    btn.classList.add('hidden'); // Oculta botão após carregar
+                    btn.classList.add('hidden');
 
                 } catch(e) {
                     btn.innerHTML = 'Tentar Novamente';
@@ -770,9 +822,7 @@
                     <div class="max-w-4xl mx-auto bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                         <div class="bg-brand-50 px-4 md:px-6 py-4 border-b border-brand-100 flex justify-between items-center">
                             <h2 class="text-xl md:text-2xl font-bold text-brand-900 flex items-center">
-                                <div class="w-8 h-8 rounded-full bg-brand-600 text-white flex items-center justify-center mr-3 shadow-sm">
-                                    <i class="fa-solid fa-${isEdit ? 'pen' : 'plus'} text-sm"></i>
-                                </div>
+                                <div class="w-8 h-8 rounded-full bg-brand-600 text-white flex items-center justify-center mr-3 shadow-sm"><i class="fa-solid fa-${isEdit ? 'pen' : 'plus'} text-sm"></i></div>
                                 ${isEdit ? 'Editar Imóvel' : 'Cadastrar Imóvel'}
                             </h2>
                             <button onclick="app.navigate('list'); app.state.editingId = null;" class="text-slate-400 hover:text-slate-700 active:bg-slate-200 md:hover:bg-white rounded-full p-2 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
@@ -795,10 +845,18 @@
                             <!-- SEÇÃO 1: DADOS BÁSICOS -->
                             <div>
                                 <h3 class="font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2 text-lg"><i class="fa-solid fa-file-lines text-brand-500 mr-2"></i> Dados do Anúncio</h3>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+                                    
                                     <div class="md:col-span-2">
                                         <label class="block text-sm font-medium text-slate-700 mb-1">Título / Descrição Curta *</label>
                                         <input type="text" id="form-title" required value="${apt.title || ''}" placeholder="Ex: Lindo Apto 2 quartos com varanda" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-base md:text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2.5 outline-none transition">
+                                    </div>
+
+                                    <div class="md:col-span-1">
+                                        <label class="block text-sm font-medium text-slate-700 mb-1"><i class="fa-solid fa-flag text-brand-500 mr-1"></i> Estado Inicial</label>
+                                        <select id="form-status" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-base md:text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2.5 outline-none transition shadow-sm font-semibold">
+                                            ${STATUS_OPTIONS.map(s => `<option value="${s}" ${(apt.status||'Novo') === s ? 'selected' : ''}>${s}</option>`).join('')}
+                                        </select>
                                     </div>
                                     
                                     <div>
@@ -809,6 +867,10 @@
                                         <label class="block text-sm font-medium text-slate-700 mb-1">Área Útil (m²) *</label>
                                         <input type="number" step="0.1" id="form-area" required value="${apt.area || ''}" placeholder="Ex: 75" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-base md:text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2.5 outline-none transition">
                                     </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Número de Quartos *</label>
+                                        <input type="number" id="form-bedrooms" required value="${apt.bedrooms || ''}" placeholder="Ex: 2" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-base md:text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2.5 outline-none transition">
+                                    </div>
 
                                     <div>
                                         <label class="block text-sm font-medium text-slate-700 mb-1">Valor Condomínio (R$)</label>
@@ -818,35 +880,26 @@
                                         <label class="block text-sm font-medium text-slate-700 mb-1">IPTU Anual (R$)</label>
                                         <input type="number" step="0.01" id="form-iptu" value="${apt.iptu || ''}" placeholder="Ex: 1200" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-base md:text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2.5 outline-none transition">
                                     </div>
-
-                                    <div>
-                                        <label class="block text-sm font-medium text-slate-700 mb-1">Número de Quartos *</label>
-                                        <input type="number" id="form-bedrooms" required value="${apt.bedrooms || ''}" placeholder="Ex: 2" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-base md:text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2.5 outline-none transition">
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-slate-700 mb-1">Link Original (URL) *</label>
-                                        <input type="url" id="form-link" required value="${apt.link || ''}" placeholder="https://..." class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-base md:text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2.5 outline-none transition">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- SEÇÃO: ESPECÍFICOS -->
-                            <div>
-                                <h3 class="font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2 text-lg"><i class="fa-solid fa-list-check text-brand-500 mr-2"></i> Detalhes Específicos</h3>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                                    
+                                    <!-- Novos Campos -->
                                     <div>
                                         <label class="block text-sm font-medium text-slate-700 mb-1">Andar</label>
-                                        <input type="text" id="form-floor" value="${apt.floor || ''}" placeholder="Ex: 5º Andar, Térreo..." class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-base md:text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2.5 outline-none transition">
+                                        <input type="text" id="form-floor" value="${apt.floor || ''}" placeholder="Ex: 3º Andar, Térreo" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-base md:text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2.5 outline-none transition">
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-slate-700 mb-1">Orientação Solar</label>
-                                        <select id="form-sun" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-base md:text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2.5 outline-none transition">
-                                            <option value="">Não informado</option>
-                                            <option value="Nascente (Manhã)" ${apt.sunOrientation === 'Nascente (Manhã)' ? 'selected' : ''}>Nascente (Sol da Manhã)</option>
-                                            <option value="Poente (Tarde)" ${apt.sunOrientation === 'Poente (Tarde)' ? 'selected' : ''}>Poente (Sol da Tarde)</option>
-                                            <option value="Norte" ${apt.sunOrientation === 'Norte' ? 'selected' : ''}>Face Norte (Sol o dia todo)</option>
-                                            <option value="Sul" ${apt.sunOrientation === 'Sul' ? 'selected' : ''}>Face Sul (Pouco sol)</option>
+                                        <select id="form-sunOrientation" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-base md:text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2.5 outline-none transition">
+                                            <option value="">Não Informado</option>
+                                            <option value="Norte" ${(apt.sunOrientation==='Norte')?'selected':''}>Norte</option>
+                                            <option value="Sul" ${(apt.sunOrientation==='Sul')?'selected':''}>Sul</option>
+                                            <option value="Leste (Nascente)" ${(apt.sunOrientation==='Leste (Nascente)')?'selected':''}>Leste (Nascente)</option>
+                                            <option value="Oeste (Poente)" ${(apt.sunOrientation==='Oeste (Poente)')?'selected':''}>Oeste (Poente)</option>
                                         </select>
+                                    </div>
+
+                                    <div class="md:col-span-2">
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Link Original (URL) *</label>
+                                        <input type="url" id="form-link" required value="${apt.link || ''}" placeholder="https://..." class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-base md:text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2.5 outline-none transition">
                                     </div>
                                 </div>
                             </div>
@@ -855,12 +908,8 @@
                             <div>
                                 <h3 class="font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2 text-lg"><i class="fa-solid fa-map-location-dot text-brand-500 mr-2"></i> Localização e Mídia</h3>
                                 
-                                <datalist id="cities-list">
-                                    ${[...new Set(this.state.apartments.map(a => a.city))].filter(Boolean).map(c => `<option value="${c}">`).join('')}
-                                </datalist>
-                                <datalist id="neighborhoods-list">
-                                    ${[...new Set(this.state.apartments.map(a => a.neighborhood))].filter(Boolean).map(n => `<option value="${n}">`).join('')}
-                                </datalist>
+                                <datalist id="cities-list">${[...new Set(this.state.apartments.map(a => a.city))].filter(Boolean).map(c => `<option value="${c}">`).join('')}</datalist>
+                                <datalist id="neighborhoods-list">${[...new Set(this.state.apartments.map(a => a.neighborhood))].filter(Boolean).map(n => `<option value="${n}">`).join('')}</datalist>
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                                     <div>
@@ -946,7 +995,7 @@
                 const photo = document.getElementById('form-photo').value;
                 
                 const floor = document.getElementById('form-floor').value;
-                const sunOrientation = document.getElementById('form-sun').value;
+                const sunOrientation = document.getElementById('form-sunOrientation').value;
 
                 const city = document.getElementById('form-city').value;
                 const neighborhood = document.getElementById('form-neighborhood').value;
@@ -954,6 +1003,7 @@
                 const building = document.getElementById('form-building').value;
                 const notes = document.getElementById('form-notes').value;
                 
+                const status = document.getElementById('form-status').value;
                 const ratingPrice = parseInt(document.getElementById('form-rating-price').value);
                 const ratingLocation = parseInt(document.getElementById('form-rating-location').value);
                 const ratingDeco = parseInt(document.getElementById('form-rating-deco').value);
@@ -994,6 +1044,7 @@
                     floor, sunOrientation, 
                     city, neighborhood, address, building, notes, priceM2, lat, lng,
                     ratingPrice, ratingLocation, ratingDeco, addedBy,
+                    status,
                     dateAdded: new Date().toISOString()
                 };
 
@@ -1008,7 +1059,6 @@
                         const index = this.state.apartments.findIndex(a => a.id === this.state.editingId);
                         if(index !== -1) {
                             aptData.favorite = this.state.apartments[index].favorite;
-                            aptData.status = this.state.apartments[index].status;
                             aptData.dateAdded = this.state.apartments[index].dateAdded;
                             this.state.apartments[index] = aptData;
                         }
@@ -1017,7 +1067,6 @@
                     } else {
                         aptData.id = crypto.randomUUID(); 
                         aptData.favorite = false;
-                        aptData.status = 'Novo'; // Estado inicial para o Kanban
                         const { error } = await supabaseClient.from('apartments').insert([aptData]);
                         if (error) throw error;
 
@@ -1032,7 +1081,6 @@
                         const index = this.state.apartments.findIndex(a => a.id === this.state.editingId);
                         if(index !== -1) {
                             aptData.favorite = this.state.apartments[index].favorite;
-                            aptData.status = this.state.apartments[index].status;
                             aptData.dateAdded = this.state.apartments[index].dateAdded;
                             this.state.apartments[index] = aptData;
                         }
@@ -1040,7 +1088,7 @@
                     } else {
                         aptData.id = crypto.randomUUID(); 
                         aptData.favorite = false;
-                        aptData.status = 'Novo';
+                        if (!aptData.status) aptData.status = 'Novo';
                         this.state.apartments.unshift(aptData);
                     }
                 }
@@ -1163,9 +1211,12 @@
                 if (!apts || !apts[idx]) return '';
                 const apt = apts[idx];
                 const avgRating = ((parseInt(apt.ratingPrice||3) + parseInt(apt.ratingLocation||3) + parseInt(apt.ratingDeco||3))/3).toFixed(1);
+                
+                const isDiscarded = apt.status === 'Descartado';
+                const discardedStyles = isDiscarded ? 'opacity-50 grayscale hover:opacity-75 bg-slate-100' : 'bg-white';
 
                 return `
-                    <div class="w-full relative bg-white">
+                    <div class="w-full relative ${discardedStyles}">
                         <div class="h-32 w-full relative">
                             <img src="${apt.photo || 'https://via.placeholder.com/400x300'}" class="w-full h-full object-cover rounded-t-xl cursor-pointer" onclick="app.viewApt('${apt.id}')">
                             <div class="absolute top-2 left-2 px-1.5 py-0.5 rounded text-[9px] font-bold shadow border ${this.getStatusColor(apt.status)}">${apt.status || 'Novo'}</div>
@@ -1249,355 +1300,63 @@
                 this.navigate('map');
             },
 
-
-            // --- VIEW: COMPARE ---
-            renderCompare(container) {
-                if (this.state.compareList.length < 2) {
-                    container.innerHTML = `
-                        <div class="mb-6">
-                            <h1 class="text-2xl md:text-3xl font-bold text-slate-800"><i class="fa-solid fa-code-compare text-brand-600 mr-2"></i> Comparador</h1>
-                        </div>
-                        <div class="bg-white rounded-xl border border-slate-200 p-8 md:p-12 text-center shadow-sm">
-                            <i class="fa-solid fa-scale-balanced text-5xl md:text-6xl text-slate-300 mb-4"></i>
-                            <h3 class="text-xl font-bold text-slate-700">Selecione pelo menos 2 imóveis</h3>
-                            <p class="text-slate-500 mt-2">Vá até a lista e marque a caixa "Comparar" em dois ou mais apartamentos.</p>
-                            <button onclick="app.navigate('list')" class="mt-6 bg-brand-600 active:bg-brand-700 md:hover:bg-brand-700 text-white px-6 py-3 rounded-lg font-medium transition shadow-sm">Ir para Lista</button>
-                        </div>
-                    `;
-                    return;
-                }
-
-                const apts = this.state.apartments.filter(a => this.state.compareList.includes(a.id));
-                
-                const minPrice = Math.min(...apts.map(a => a.price));
-                const minPriceM2 = Math.min(...apts.map(a => a.priceM2));
-                const maxArea = Math.max(...apts.map(a => a.area));
-                const bestRatingPrice = Math.max(...apts.map(a => a.ratingPrice || 1));
-                const bestRatingLoc = Math.max(...apts.map(a => a.ratingLocation || 1));
-                const bestRatingDeco = Math.max(...apts.map(a => a.ratingDeco || 1));
-
-                let html = `
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
-                        <div>
-                            <h1 class="text-2xl md:text-3xl font-bold text-slate-800"><i class="fa-solid fa-code-compare text-brand-600 mr-2"></i> Comparador Lado a Lado</h1>
-                            <p class="text-slate-500 mt-1 text-sm md:text-base">Comparando ${apts.length} imóveis. <span class="text-emerald-600 font-medium">Verde</span> indica o melhor valor.</p>
-                        </div>
-                        <button onclick="app.clearCompare()" class="text-sm text-red-500 md:hover:text-red-700 bg-red-50 active:bg-red-100 md:hover:bg-red-100 px-4 py-3 md:py-2 rounded-lg transition border border-red-100 font-medium w-full md:w-auto text-center">
-                            <i class="fa-solid fa-trash mr-1"></i> Limpar Tudo
-                        </button>
-                    </div>
-
-                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto custom-scrollbar">
-                        <table class="w-full text-left border-collapse table-fixed" style="min-width: ${120 + (apts.length * 280)}px;">
-                            <thead>
-                                <tr>
-                                    <th class="p-3 md:p-4 border-b border-r border-slate-200 bg-slate-50 w-[120px] md:w-[150px] sticky left-0 z-10 shadow-[1px_0_0_0_#e2e8f0]">Atributo</th>
-                                    ${apts.map(a => `
-                                        <th class="p-3 md:p-4 border-b border-slate-200 bg-white align-top">
-                                            <div class="relative">
-                                                <button onclick="app.toggleCompare('${a.id}'); app.renderCompare(document.getElementById('main-content'));" class="absolute -top-2 -right-2 w-8 h-8 md:w-6 md:h-6 bg-red-100 text-red-500 rounded-full flex items-center justify-center md:hover:bg-red-500 active:bg-red-500 active:text-white md:hover:text-white transition shadow-sm" title="Remover">
-                                                    <i class="fa-solid fa-xmark text-sm md:text-xs"></i>
-                                                </button>
-                                                <img src="${a.photo || 'https://via.placeholder.com/300x200'}" class="w-full h-32 object-cover rounded-lg mb-3 shadow-sm cursor-pointer" onclick="app.viewApt('${a.id}')">
-                                                <h4 class="font-bold text-slate-800 text-sm line-clamp-2">${a.title}</h4>
-                                                <p class="text-xs text-slate-500 mt-1">${a.neighborhood}, ${a.city}</p>
-                                            </div>
-                                        </th>
-                                    `).join('')}
-                                </tr>
-                            </thead>
-                            <tbody class="text-sm divide-y divide-slate-100">
-                                <tr class="hover:bg-slate-50 bg-brand-50/20">
-                                    <td class="p-3 md:p-4 font-semibold text-slate-700 border-r border-slate-200 bg-slate-50 sticky left-0 z-10 shadow-[1px_0_0_0_#e2e8f0]">Preço (Total)</td>
-                                    ${apts.map(a => `<td class="p-3 md:p-4 font-bold text-base md:text-lg ${a.price === minPrice ? 'text-emerald-600 bg-emerald-50/50' : 'text-slate-800'}">${this.formatCurrency(a.price)}</td>`).join('')}
-                                </tr>
-                                <tr class="hover:bg-slate-50 bg-brand-50/20">
-                                    <td class="p-3 md:p-4 font-semibold text-slate-700 border-r border-slate-200 bg-slate-50 sticky left-0 z-10 shadow-[1px_0_0_0_#e2e8f0]">Preço / m²</td>
-                                    ${apts.map(a => `<td class="p-3 md:p-4 font-bold ${a.priceM2 === minPriceM2 ? 'text-emerald-600 bg-emerald-50/50' : 'text-slate-800'}">${this.formatCurrency(a.priceM2)}</td>`).join('')}
-                                </tr>
-                                <tr class="hover:bg-slate-50">
-                                    <td class="p-3 md:p-4 font-semibold text-slate-700 border-r border-slate-200 bg-slate-50 sticky left-0 z-10 shadow-[1px_0_0_0_#e2e8f0]">Área Útil</td>
-                                    ${apts.map(a => `<td class="p-3 md:p-4 ${a.area === maxArea ? 'text-emerald-600 font-bold bg-emerald-50/50' : 'text-slate-700'}">${a.area} m²</td>`).join('')}
-                                </tr>
-                                <tr class="hover:bg-slate-50">
-                                    <td class="p-3 md:p-4 font-semibold text-slate-700 border-r border-slate-200 bg-slate-50 sticky left-0 z-10 shadow-[1px_0_0_0_#e2e8f0]">Quartos</td>
-                                    ${apts.map(a => `<td class="p-3 md:p-4 text-slate-700">${a.bedrooms}</td>`).join('')}
-                                </tr>
-                                <tr class="hover:bg-slate-50">
-                                    <td class="p-3 md:p-4 font-semibold text-slate-700 border-r border-slate-200 bg-slate-50 sticky left-0 z-10 shadow-[1px_0_0_0_#e2e8f0]">Mensalidade</td>
-                                    ${apts.map(a => {
-                                        const iptuMensal = (a.iptu || 0) / 12;
-                                        const totalExtra = (a.condo || 0) + iptuMensal;
-                                        return `
-                                        <td class="p-3 md:p-4 text-slate-700">
-                                            <div>Cond: ${this.formatCurrency(a.condo)} <span class="text-xs text-slate-400">/mês</span></div>
-                                            <div>IPTU: ${this.formatCurrency(a.iptu)} <span class="text-xs text-slate-400">/ano</span></div>
-                                            <div class="font-semibold text-xs mt-1 border-t pt-1 border-slate-200 text-brand-700">Total extra: ${this.formatCurrency(totalExtra)} <span class="text-[10px] text-brand-600/70">/mês</span></div>
-                                        </td>
-                                        `;
-                                    }).join('')}
-                                </tr>
-                                <tr class="hover:bg-slate-50">
-                                    <td class="p-3 md:p-4 font-semibold text-slate-700 border-r border-slate-200 bg-slate-50 sticky left-0 z-10 shadow-[1px_0_0_0_#e2e8f0]">Extras</td>
-                                    ${apts.map(a => `
-                                        <td class="p-3 md:p-4 text-slate-700 text-xs">
-                                            <div>Andar: <span class="font-medium">${a.floor || '-'}</span></div>
-                                            <div>Sol: <span class="font-medium">${a.sunOrientation || '-'}</span></div>
-                                        </td>
-                                    `).join('')}
-                                </tr>
-                                
-                                <tr>
-                                    <td colspan="${apts.length + 1}" class="bg-slate-100 p-2 font-bold text-xs text-slate-500 uppercase tracking-wider text-center sticky left-0">Suas Avaliações</td>
-                                </tr>
-                                <tr class="hover:bg-slate-50">
-                                    <td class="p-3 md:p-4 font-semibold text-slate-700 border-r border-slate-200 bg-slate-50 sticky left-0 z-10 shadow-[1px_0_0_0_#e2e8f0]"><i class="fa-solid fa-sack-dollar mr-1 text-slate-400"></i> Nota Preço</td>
-                                    ${apts.map(a => `<td class="p-3 md:p-4 ${a.ratingPrice === bestRatingPrice && a.ratingPrice > 1 ? 'bg-emerald-50/50' : ''}">${this.renderStars(a.ratingPrice||0)}</td>`).join('')}
-                                </tr>
-                                <tr class="hover:bg-slate-50">
-                                    <td class="p-3 md:p-4 font-semibold text-slate-700 border-r border-slate-200 bg-slate-50 sticky left-0 z-10 shadow-[1px_0_0_0_#e2e8f0]"><i class="fa-solid fa-map-pin mr-1 text-slate-400"></i> Nota Local</td>
-                                    ${apts.map(a => `<td class="p-3 md:p-4 ${a.ratingLocation === bestRatingLoc && a.ratingLocation > 1 ? 'bg-emerald-50/50' : ''}">${this.renderStars(a.ratingLocation||0)}</td>`).join('')}
-                                </tr>
-                                <tr class="hover:bg-slate-50">
-                                    <td class="p-3 md:p-4 font-semibold text-slate-700 border-r border-slate-200 bg-slate-50 sticky left-0 z-10 shadow-[1px_0_0_0_#e2e8f0]"><i class="fa-solid fa-couch mr-1 text-slate-400"></i> Nota Decoração</td>
-                                    ${apts.map(a => `<td class="p-3 md:p-4 ${a.ratingDeco === bestRatingDeco && a.ratingDeco > 1 ? 'bg-emerald-50/50' : ''}">${this.renderStars(a.ratingDeco||0)}</td>`).join('')}
-                                </tr>
-
-                                <tr class="hover:bg-slate-50 border-t-2 border-slate-100">
-                                    <td class="p-3 md:p-4 font-semibold text-slate-700 border-r border-slate-200 bg-slate-50 sticky left-0 z-10 shadow-[1px_0_0_0_#e2e8f0]">Cadastrado por</td>
-                                    ${apts.map(a => `<td class="p-3 md:p-4 text-slate-700 font-medium"><i class="fa-solid fa-user text-slate-400 mr-1 text-xs"></i> ${a.addedBy || 'Desconhecido'}</td>`).join('')}
-                                </tr>
-                                <tr class="hover:bg-slate-50">
-                                    <td class="p-3 md:p-4 font-semibold text-slate-700 border-r border-slate-200 bg-slate-50 sticky left-0 z-10 shadow-[1px_0_0_0_#e2e8f0]">Edifício</td>
-                                    ${apts.map(a => `<td class="p-3 md:p-4 text-slate-700 font-medium">${a.building || '-'}</td>`).join('')}
-                                </tr>
-                                <tr class="hover:bg-slate-50">
-                                    <td class="p-3 md:p-4 font-semibold text-slate-700 border-r border-slate-200 bg-slate-50 sticky left-0 z-10 shadow-[1px_0_0_0_#e2e8f0]">Endereço</td>
-                                    ${apts.map(a => `<td class="p-3 md:p-4 text-slate-600 text-xs">${a.address || '-'}</td>`).join('')}
-                                </tr>
-                                <tr class="hover:bg-slate-50">
-                                    <td class="p-3 md:p-4 font-semibold text-slate-700 border-r border-slate-200 bg-slate-50 sticky left-0 z-10 shadow-[1px_0_0_0_#e2e8f0]">Observações</td>
-                                    ${apts.map(a => `<td class="p-3 md:p-4 text-slate-600 text-xs italic bg-amber-50/20">${a.notes || '-'}</td>`).join('')}
-                                </tr>
-                                <tr>
-                                    <td class="p-3 md:p-4 border-r border-slate-200 bg-slate-50 sticky left-0 z-10 shadow-[1px_0_0_0_#e2e8f0]"></td>
-                                    ${apts.map(a => `
-                                        <td class="p-3 md:p-4 bg-slate-50">
-                                            <a href="${a.link}" target="_blank" class="block w-full text-center bg-brand-600 active:bg-brand-700 md:hover:bg-brand-700 text-white font-medium py-3 md:py-2 rounded-lg transition shadow-sm text-sm">
-                                                Ver Anúncio <i class="fa-solid fa-external-link-alt ml-1"></i>
-                                            </a>
-                                        </td>
-                                    `).join('')}
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                `;
-                container.innerHTML = html;
-            },
-
-            formatCurrency(value) {
-                return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-            },
-
-            async toggleFavorite(id) {
-                const apt = this.state.apartments.find(a => a.id === id);
-                if(apt) {
-                    const newFavState = !apt.favorite;
-                    
-                    apt.favorite = newFavState;
-                    localStorage.setItem('meuAptoIdealData_v2', JSON.stringify(this.state.apartments));
-
-                    if(this.state.view === 'favorites') this.renderList(document.getElementById('main-content'), true);
-                    else this.renderList(document.getElementById('main-content'), false);
-                    
-                    try {
-                        if (supabaseClient) {
-                            await supabaseClient.from('apartments').update({ favorite: newFavState }).eq('id', id);
-                        }
-                    } catch(err) {
-                        console.error("Erro ao favoritar no banco", err);
-                    }
-                }
-            },
-
-            toggleCompare(id) {
-                const index = this.state.compareList.indexOf(id);
-                if (index > -1) {
-                    this.state.compareList.splice(index, 1);
-                } else {
-                    if (this.state.compareList.length >= 4) {
-                        Swal.fire({icon: 'warning', title: 'Limite Atingido', text: 'Você pode comparar no máximo 4 imóveis por vez.'});
-                        this.renderList(document.getElementById('main-content'), this.state.view === 'favorites');
-                        return;
-                    }
-                    this.state.compareList.push(id);
-                }
-                this.saveData();
-            },
-
-            clearCompare() {
-                this.state.compareList = [];
-                this.saveData();
-                this.renderCompare(document.getElementById('main-content'));
-            },
-
-            editApt(id) {
-                this.state.editingId = id;
-                this.navigate('form');
-            },
-
-            deleteApt(id) {
-                Swal.fire({
-                    title: 'Tem certeza?',
-                    text: "Esta ação apagará o registro!",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#ef4444',
-                    cancelButtonColor: '#64748b',
-                    confirmButtonText: 'Sim, excluir!',
-                    cancelButtonText: 'Cancelar'
-                }).then(async (result) => {
-                    if (result.isConfirmed) {
-                        Swal.fire({ title: 'Excluindo...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-                        
-                        try {
-                            if (supabaseClient) {
-                                const { error } = await supabaseClient.from('apartments').delete().eq('id', id);
-                                if (error) throw error;
-                            }
-                        } catch(err) {
-                            console.error("Erro ao excluir no Supabase", err);
-                        }
-
-                        this.state.apartments = this.state.apartments.filter(a => a.id !== id);
-                        this.state.compareList = this.state.compareList.filter(c => c !== id);
-                        this.saveData();
-                        localStorage.setItem('meuAptoIdealData_v2', JSON.stringify(this.state.apartments));
-
-                        this.renderList(document.getElementById('main-content'), this.state.view === 'favorites');
-                        Swal.fire('Excluído!', 'O apartamento foi deletado.', 'success');
-                    }
-                })
-            },
-
-            applyFilters() {
-                this.state.filters = {
-                    searchTitle: document.getElementById('filter-title').value,
-                    neighborhood: document.getElementById('filter-neighborhood').value,
-                    building: document.getElementById('filter-building').value,
-                };
-                this.renderList(document.getElementById('main-content'), false);
-            },
-
-            clearFilters() {
-                this.state.filters = { searchTitle: '', neighborhood: '', building: '' };
-                document.getElementById('filter-title').value = '';
-                document.getElementById('filter-neighborhood').value = '';
-                document.getElementById('filter-building').value = '';
-                this.renderList(document.getElementById('main-content'), false);
-            },
-
-            handleSort(val) {
-                this.state.sortBy = val;
-                this.renderList(document.getElementById('main-content'), this.state.view === 'favorites');
-            },
-
+            // --- AI INTEGRATION ---
             async openAIModal() {
                 const { value: text } = await Swal.fire({
                     title: '<i class="fa-solid fa-wand-magic-sparkles text-brand-600"></i> Extração com IA',
-                    html: '<p class="text-sm text-slate-600 mb-2">Cole aqui abaixo todo o conteúdo que você copiou do anúncio.</p><textarea id="ai-text-input" class="w-full h-48 p-3 border border-slate-300 rounded-lg focus:ring-brand-500 focus:border-brand-500 outline-none resize-none text-sm" placeholder="Ex: Apartamento no Bairro Centro em Timbó com 3 Dormitórios (3 suítes) e 156 m²..."></textarea>',
-                    showCancelButton: true,
-                    confirmButtonText: 'Extrair Dados',
-                    cancelButtonText: 'Cancelar',
-                    confirmButtonColor: '#059669',
-                    preConfirm: () => {
-                        const input = document.getElementById('ai-text-input').value;
-                        if (!input) {
-                            Swal.showValidationMessage('Por favor, cole algum texto.');
-                        }
-                        return input;
-                    }
+                    html: '<p class="text-sm text-slate-600 mb-2">Cole aqui abaixo todo o conteúdo que você copiou do anúncio.</p><textarea id="ai-text-input" class="w-full h-48 p-3 border border-slate-300 rounded-lg focus:ring-brand-500 focus:border-brand-500 outline-none resize-none text-sm" placeholder="Ex: Apartamento no Bairro Centro em Timbó com 3 Dormitórios..."></textarea>',
+                    showCancelButton: true, confirmButtonText: 'Extrair', cancelButtonText: 'Cancelar', confirmButtonColor: '#059669',
+                    preConfirm: () => document.getElementById('ai-text-input').value || Swal.showValidationMessage('Cole algum texto.')
                 });
-
-                if (text) {
-                    this.processWithAI(text);
-                }
+                if (text) this.processWithAI(text);
             },
 
             async processWithAI(rawText) {
-                Swal.fire({
-                    title: 'Analisando com IA...',
-                    html: 'Lendo o anúncio e extraindo as informações.<br>Isso pode levar alguns segundos.',
-                    allowOutsideClick: false,
-                    didOpen: () => Swal.showLoading()
-                });
-
+                Swal.fire({ title: 'Analisando com IA...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
                 const apiKey = ""; 
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
                 
-                const prompt = `Analise o seguinte texto de um anúncio imobiliário e extraia os dados solicitados.
-                Texto do anúncio:
-                """${rawText}"""`;
-
+                const prompt = `Analise o anúncio e extraia os dados.\nTexto:\n"""${rawText}"""`;
                 const payload = {
                     contents: [{ parts: [{ text: prompt }] }],
-                    systemInstruction: { parts: [{ text: "Você é um corretor e analista de dados especialista em imóveis no Brasil. Analise o texto colado e preencha os dados requisitados. Retorne estritamente um JSON de acordo com o schema. Se uma informação não for encontrada no texto, retorne nulo ou vazio." }] },
+                    systemInstruction: { parts: [{ text: "Você é um corretor. Retorne um JSON. Se não achar, retorne nulo." }] },
                     generationConfig: {
                         responseMimeType: "application/json",
                         responseSchema: {
                             type: "OBJECT",
                             properties: {
-                                title: { type: "STRING", description: "Um título atrativo, claro e curto para o imóvel" },
-                                price: { type: "NUMBER", description: "O valor principal de venda. Apenas o número (sem cifrão ou formatação). Se for 1.800.000,00 retorne 1800000" },
-                                area: { type: "NUMBER", description: "A área útil/privativa em m². Apenas o número." },
-                                condo: { type: "NUMBER", description: "O valor do condomínio mensal. Apenas número." },
-                                iptu: { type: "NUMBER", description: "O valor do IPTU anual. Apenas número." },
-                                bedrooms: { type: "NUMBER", description: "A quantidade de quartos/dormitórios do imóvel. Apenas número." },
-                                city: { type: "STRING", description: "O nome da cidade do imóvel." },
-                                neighborhood: { type: "STRING", description: "O bairro onde o imóvel está localizado." },
-                                address: { type: "STRING", description: "O endereço (rua, avenida) se estiver disponível." },
-                                building: { type: "STRING", description: "O nome do edifício, residencial ou condomínio." },
-                                floor: { type: "STRING", description: "Andar do apartamento (ex: 5º andar, Térreo)." },
+                                title: { type: "STRING" },
+                                price: { type: "NUMBER" },
+                                area: { type: "NUMBER" },
+                                condo: { type: "NUMBER" },
+                                iptu: { type: "NUMBER" },
+                                bedrooms: { type: "NUMBER" },
+                                city: { type: "STRING" },
+                                neighborhood: { type: "STRING" },
+                                address: { type: "STRING" },
+                                building: { type: "STRING" },
+                                floor: { type: "STRING", description: "O andar do apartamento (Ex: 3º Andar, Térreo)." },
                                 sunOrientation: { type: "STRING", description: "Orientação solar (Nascente, Poente, Face Norte, Face Sul)." },
-                                notes: { type: "STRING", description: "Um resumo descritivo destacando principais características e móveis." }
+                                notes: { type: "STRING" }
                             }
                         }
                     }
                 };
 
-                let attempt = 0;
-                const maxAttempts = 5;
-                const delays = [1000, 2000, 4000, 8000, 16000];
-
-                while (attempt < maxAttempts) {
+                for(let attempt=0; attempt<5; attempt++) {
                     try {
-                        const response = await fetch(url, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify(payload)
-                        });
-
+                        const response = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
                         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                        
                         const result = await response.json();
                         const textData = result.candidates?.[0]?.content?.parts?.[0]?.text;
-                        
                         if (textData) {
-                            const data = JSON.parse(textData);
-                            this.fillFormWithAI(data);
-                            Swal.fire({ icon: 'success', title: 'Sucesso!', text: 'Os dados foram extraídos e preenchidos automaticamente. Revise-os antes de salvar.', timer: 3000, showConfirmButton: true, confirmButtonColor: '#059669' });
-                            return;
-                        } else {
-                            throw new Error("Resposta vazia da IA");
-                        }
-                    } catch (error) {
-                        attempt++;
-                        if (attempt >= maxAttempts) {
-                            Swal.fire({ icon: 'error', title: 'Ops!', text: 'Não foi possível extrair os dados usando a IA neste momento. Tente preencher manualmente.' });
+                            this.fillFormWithAI(JSON.parse(textData));
+                            Swal.fire({ icon: 'success', title: 'Sucesso!', text: 'Extração concluída.', timer: 2000, showConfirmButton: false });
                             return;
                         }
-                        await new Promise(res => setTimeout(res, delays[attempt - 1]));
+                    } catch (e) {
+                        if(attempt === 4) Swal.fire({ icon: 'error', title: 'Ops!', text: 'Erro na IA.' });
+                        await new Promise(res => setTimeout(res, [1000, 2000, 4000, 8000, 16000][attempt]));
                     }
                 }
             },
@@ -1615,10 +1374,10 @@
                 if (data.building) document.getElementById('form-building').value = data.building;
                 if (data.floor) document.getElementById('form-floor').value = data.floor;
                 if (data.sunOrientation) {
-                    const sel = document.getElementById('form-sun');
+                    const sel = document.getElementById('form-sunOrientation');
                     const text = data.sunOrientation.toLowerCase();
-                    if(text.includes('nasc')) sel.value = 'Nascente (Manhã)';
-                    else if(text.includes('poen')) sel.value = 'Poente (Tarde)';
+                    if(text.includes('nasc') || text.includes('leste')) sel.value = 'Leste (Nascente)';
+                    else if(text.includes('poen') || text.includes('oeste')) sel.value = 'Oeste (Poente)';
                     else if(text.includes('nort')) sel.value = 'Norte';
                     else if(text.includes('sul')) sel.value = 'Sul';
                 }
@@ -1631,7 +1390,10 @@
                         id: "1", title: "Lindo Apto 2 quartos em Pinheiros", link: "https://exemplo.com", price: 650000, condo: 550, iptu: 120, city: "São Paulo", neighborhood: "Pinheiros", address: "Rua Teodoro Sampaio, 1000", photo: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80", bedrooms: 2, area: 65, priceM2: 10000, notes: "Bem localizado, perto do metrô. Precisa reformar a cozinha.", lat: -23.5645, lng: -46.6834, favorite: true, ratingPrice: 4, ratingLocation: 5, ratingDeco: 2, addedBy: "João Silva", status: "Visita Agendada", floor: "3º Andar", sunOrientation: "Norte", dateAdded: new Date(Date.now() - 86400000).toISOString()
                     },
                     {
-                        id: "2", title: "Apartamento com Varanda Gourmet", link: "https://exemplo.com", price: 850000, condo: 800, iptu: 200, city: "São Paulo", neighborhood: "Vila Mariana", address: "Rua Domingos de Morais", photo: "https://images.unsplash.com/photo-1502672260266-1c1e5240980c?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80", bedrooms: 3, area: 90, priceM2: 9444.44, notes: "Prédio novo com piscina e academia. Sol da tarde.", lat: -23.5891, lng: -46.6341, favorite: false, ratingPrice: 3, ratingLocation: 4, ratingDeco: 5, addedBy: "Maria Clara", status: "Novo", floor: "10º Andar", sunOrientation: "Poente (Tarde)", dateAdded: new Date().toISOString()
+                        id: "2", title: "Apartamento com Varanda Gourmet", link: "https://exemplo.com", price: 850000, condo: 800, iptu: 200, city: "São Paulo", neighborhood: "Vila Mariana", address: "Rua Domingos de Morais", photo: "https://images.unsplash.com/photo-1502672260266-1c1e5240980c?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80", bedrooms: 3, area: 90, priceM2: 9444.44, notes: "Prédio novo com piscina e academia. Sol da tarde.", lat: -23.5891, lng: -46.6341, favorite: false, ratingPrice: 3, ratingLocation: 4, ratingDeco: 5, addedBy: "Maria Clara", status: "Novo", floor: "10º Andar", sunOrientation: "Oeste (Poente)", dateAdded: new Date().toISOString()
+                    },
+                    {
+                        id: "3", title: "Kitnet mobiliada no Centro", link: "https://exemplo.com", price: 280000, condo: 300, iptu: 50, city: "São Paulo", neighborhood: "Centro Histórico", address: "Av. Ipiranga", photo: "https://images.unsplash.com/photo-1493809842364-78817add7ffb?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80", bedrooms: 1, area: 35, priceM2: 8000, notes: "Ótimo para investir e alugar. Sem garagem.", lat: -23.5432, lng: -46.6417, favorite: false, ratingPrice: 5, ratingLocation: 3, ratingDeco: 4, addedBy: "João Silva", status: "Descartado", floor: "1º Andar", sunOrientation: "Sul", dateAdded: new Date(Date.now() - 172800000).toISOString()
                     }
                 ];
             }
