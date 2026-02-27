@@ -55,19 +55,22 @@
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         
-        /* Ajustes Leaflet Popup para o modo Card/Carrossel Premium */
+        /* Ajustes Leaflet Popup */
         .custom-leaflet-popup .leaflet-popup-content-wrapper { padding: 0 !important; overflow: hidden; border-radius: 0.75rem; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2); }
         .custom-leaflet-popup .leaflet-popup-content { margin: 0 !important; width: 280px !important; }
         @media (min-width: 768px) { .custom-leaflet-popup .leaflet-popup-content { width: 320px !important; } }
-        /* X de fechar por cima da imagem */
         .custom-leaflet-popup .leaflet-popup-close-button { color: white !important; background: rgba(0,0,0,0.4) !important; border-radius: 50%; width: 24px !important; height: 24px !important; text-align: center; line-height: 24px !important; right: 10px !important; top: 10px !important; z-index: 20; text-decoration: none; font-weight: bold; font-family: sans-serif; transition: background 0.3s; padding: 0 !important;}
         .custom-leaflet-popup .leaflet-popup-close-button:hover { background: rgba(0,0,0,0.7) !important; }
         
-        /* Ajuste de select para mobile */
         select { appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 0.5rem center; background-size: 1em; padding-right: 2.5rem !important; }
         
         body { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
         .overflow-x-auto { -webkit-overflow-scrolling: touch; }
+
+        /* Kanban Columns drag visual */
+        .kanban-col.drag-over { background-color: #f1f5f9; border-color: #10b981; border-style: dashed; }
+        .kanban-card { cursor: grab; }
+        .kanban-card:active { cursor: grabbing; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col pb-20 md:pb-0">
@@ -75,16 +78,19 @@
     <!-- Navbar Superior -->
     <nav class="bg-brand-700 text-white shadow-lg sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between md:justify-start h-16">
-                <div class="flex items-center cursor-pointer md:mr-8" onclick="app.navigate('list')">
+            <div class="flex justify-between md:justify-start h-16 overflow-x-auto custom-scrollbar items-center">
+                <div class="flex items-center cursor-pointer md:mr-8 shrink-0" onclick="app.navigate('list')">
                     <i class="fa-solid fa-building text-2xl mr-2 text-brand-200"></i>
                     <span class="font-bold text-xl tracking-tight">Meu Apto Ideal</span>
                 </div>
                 
                 <!-- Desktop Menu -->
-                <div class="hidden md:flex items-center space-x-1" id="nav-links">
+                <div class="hidden md:flex items-center space-x-1 shrink-0" id="nav-links">
                     <button onclick="app.navigate('list')" class="nav-btn px-3 py-2 rounded-md text-sm font-medium hover:bg-brand-600 transition" data-target="list">
-                        <i class="fa-solid fa-list mr-1"></i> Apartamentos
+                        <i class="fa-solid fa-list mr-1"></i> Lista
+                    </button>
+                    <button onclick="app.navigate('kanban')" class="nav-btn px-3 py-2 rounded-md text-sm font-medium hover:bg-brand-600 transition" data-target="kanban">
+                        <i class="fa-solid fa-table-columns mr-1"></i> Kanban
                     </button>
                     <button onclick="app.navigate('map')" class="nav-btn px-3 py-2 rounded-md text-sm font-medium hover:bg-brand-600 transition" data-target="map">
                         <i class="fa-solid fa-map-location-dot mr-1"></i> Mapa
@@ -105,28 +111,28 @@
     </nav>
 
     <!-- Bottom Navigation (Mobile Only) -->
-    <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around items-center h-16 z-50 pb-safe shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-        <button onclick="app.navigate('list')" class="nav-btn-mobile flex-1 flex flex-col items-center justify-center text-slate-500 hover:text-brand-600 h-full transition-colors" data-target="list">
-            <i class="fa-solid fa-list text-xl mb-1"></i><span class="text-[10px] font-medium">Lista</span>
+    <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around items-center h-16 z-50 pb-safe shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] px-1 overflow-x-auto custom-scrollbar">
+        <button onclick="app.navigate('list')" class="nav-btn-mobile flex-1 min-w-[60px] flex flex-col items-center justify-center text-slate-500 hover:text-brand-600 h-full transition-colors" data-target="list">
+            <i class="fa-solid fa-list text-lg mb-1"></i><span class="text-[10px] font-medium">Lista</span>
         </button>
-        <button onclick="app.navigate('map')" class="nav-btn-mobile flex-1 flex flex-col items-center justify-center text-slate-500 hover:text-brand-600 h-full transition-colors" data-target="map">
-            <i class="fa-solid fa-map-location-dot text-xl mb-1"></i><span class="text-[10px] font-medium">Mapa</span>
+        <button onclick="app.navigate('kanban')" class="nav-btn-mobile flex-1 min-w-[60px] flex flex-col items-center justify-center text-slate-500 hover:text-brand-600 h-full transition-colors" data-target="kanban">
+            <i class="fa-solid fa-table-columns text-lg mb-1"></i><span class="text-[10px] font-medium">Funil</span>
         </button>
         
         <!-- Botão Adicionar Flutuante -->
-        <button onclick="app.navigate('form')" class="nav-btn-mobile relative flex-1 flex flex-col items-center justify-center h-full group" data-target="form">
-            <div class="absolute -top-6 bg-brand-600 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg border-4 border-slate-50 group-hover:scale-105 transition-transform duration-200">
+        <button onclick="app.navigate('form')" class="nav-btn-mobile relative flex-1 min-w-[60px] flex flex-col items-center justify-center h-full group" data-target="form">
+            <div class="absolute -top-6 bg-brand-600 text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg border-[3px] border-slate-50 group-hover:scale-105 transition-transform duration-200">
                 <i class="fa-solid fa-plus text-xl"></i>
             </div>
             <span class="text-[10px] mt-8 text-brand-600 font-bold opacity-0 transition-opacity">Novo</span>
         </button>
         
-        <button onclick="app.navigate('compare')" class="nav-btn-mobile flex-1 flex flex-col items-center justify-center text-slate-500 hover:text-brand-600 h-full relative transition-colors" data-target="compare">
-            <i class="fa-solid fa-code-compare text-xl mb-1"></i><span class="text-[10px] font-medium">Comparar</span>
-            <span id="compare-badge-mobile" class="absolute top-1 right-2 bg-red-500 text-white text-[9px] font-bold rounded-full h-4 w-4 flex items-center justify-center hidden shadow-sm">0</span>
+        <button onclick="app.navigate('map')" class="nav-btn-mobile flex-1 min-w-[60px] flex flex-col items-center justify-center text-slate-500 hover:text-brand-600 h-full transition-colors" data-target="map">
+            <i class="fa-solid fa-map-location-dot text-lg mb-1"></i><span class="text-[10px] font-medium">Mapa</span>
         </button>
-        <button onclick="app.navigate('favorites')" class="nav-btn-mobile flex-1 flex flex-col items-center justify-center text-slate-500 hover:text-brand-600 h-full transition-colors" data-target="favorites">
-            <i class="fa-solid fa-heart text-xl mb-1"></i><span class="text-[10px] font-medium">Favoritos</span>
+        <button onclick="app.navigate('compare')" class="nav-btn-mobile flex-1 min-w-[60px] flex flex-col items-center justify-center text-slate-500 hover:text-brand-600 h-full relative transition-colors" data-target="compare">
+            <i class="fa-solid fa-code-compare text-lg mb-1"></i><span class="text-[10px] font-medium">Compara</span>
+            <span id="compare-badge-mobile" class="absolute top-1 right-1 bg-red-500 text-white text-[9px] font-bold rounded-full h-4 w-4 flex items-center justify-center hidden shadow-sm">0</span>
         </button>
     </div>
 
@@ -135,16 +141,9 @@
         <!-- Views serão injetadas aqui pelo JS -->
     </main>
 
-    <footer class="bg-white border-t border-slate-200 mt-auto py-6">
-        <div class="max-w-7xl mx-auto px-4 text-center text-slate-500 text-sm">
-            <p><i class="fa-solid fa-building text-brand-500"></i> Meu Apto Ideal &copy; 2026 - Ferramenta de Comparação Imobiliária.</p>
-        </div>
-    </footer>
-
     <!-- Modal de Detalhes -->
     <div id="apt-modal" class="fixed inset-0 bg-slate-900/70 z-[100] hidden items-center justify-center p-4 backdrop-blur-sm transition-opacity overflow-hidden" onclick="app.closeModal(event)">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto overflow-x-hidden flex flex-col relative animate-fade-in-up custom-scrollbar" onclick="event.stopPropagation()">
-            <!-- Injetado dinamicamente -->
             <div id="modal-content-inject"></div>
         </div>
     </div>
@@ -154,7 +153,6 @@
 
     <!-- Application Logic -->
     <script>
-        // --- INICIALIZAÇÃO SUPABASE ---
         const supabaseUrl = 'https://ydazjbnolrsheicyefmh.supabase.co'; 
         const supabaseKey = 'sb_publishable_uftOQnToDUBrydtMrIAt7w_WvvwfXu1';
         
@@ -165,7 +163,6 @@
             console.warn("Supabase URL inválida. O aplicativo rodará em modo local.");
         }
 
-        // --- DATA & STATE MANAGEMENT ---
         const app = {
             state: {
                 view: 'list',
@@ -175,11 +172,10 @@
                 sortBy: 'dateDesc',
                 editingId: null,
                 mapInstance: null,
-                // Variáveis para edição de posição no mapa
                 draggingAptId: null,
                 tempDragLatLng: null,
-                // Variáveis para Carrossel do Popup do Mapa
-                clusters: {} // Armazena os grupos de apartamentos por ID
+                clusters: {},
+                statuses: ['Novo', 'Visita Agendada', 'Visitado', 'Proposta', 'Descartado']
             },
 
             async init() {
@@ -201,7 +197,7 @@
                     if (error) throw error;
                     
                     if (data && data.length > 0) {
-                        this.state.apartments = data;
+                        this.state.apartments = data.map(a => ({...a, status: a.status || 'Novo'}));
                     } else {
                         this.state.apartments = this.getSampleData();
                     }
@@ -211,7 +207,7 @@
                     
                     const localData = localStorage.getItem('meuAptoIdealData_v2');
                     if (localData) {
-                        this.state.apartments = JSON.parse(localData);
+                        this.state.apartments = JSON.parse(localData).map(a => ({...a, status: a.status || 'Novo'}));
                     } else {
                         this.state.apartments = this.getSampleData();
                     }
@@ -244,9 +240,7 @@
                 }
             },
 
-            // --- ROUTING & RENDERING ---
             navigate(view) {
-                // Previne sair se estiver movendo o pino no mapa
                 if(this.state.draggingAptId && view !== 'map') {
                     Swal.fire('Ação Pendente', 'Salve ou cancele a posição do pino primeiro.', 'warning');
                     return;
@@ -275,7 +269,6 @@
                 });
 
                 const content = document.getElementById('main-content');
-                
                 if (this.state.view !== 'map' && this.state.mapInstance) {
                     this.state.mapInstance.remove();
                     this.state.mapInstance = null;
@@ -287,6 +280,7 @@
                     case 'form': this.renderForm(content); break;
                     case 'map': this.renderMap(content); break;
                     case 'compare': this.renderCompare(content); break;
+                    case 'kanban': this.renderKanban(content); break;
                 }
                 
                 window.scrollTo(0,0);
@@ -298,6 +292,17 @@
                     html += `<i class="fa-solid fa-star ${i <= rating ? 'text-amber-400' : 'text-slate-200'}"></i>`;
                 }
                 return html;
+            },
+
+            getStatusColor(status) {
+                switch(status) {
+                    case 'Novo': return 'bg-blue-100 text-blue-700 border-blue-200';
+                    case 'Visita Agendada': return 'bg-amber-100 text-amber-700 border-amber-200';
+                    case 'Visitado': return 'bg-purple-100 text-purple-700 border-purple-200';
+                    case 'Proposta': return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+                    case 'Descartado': return 'bg-slate-100 text-slate-600 border-slate-200 line-through opacity-70';
+                    default: return 'bg-gray-100 text-gray-700';
+                }
             },
 
             // --- VIEW: LIST / FAVORITES ---
@@ -359,9 +364,7 @@
                         ` : ''}
 
                         <!-- Grid de Apartamentos -->
-                        <div class="w-full ${!onlyFavorites ? 'lg:w-3/4' : ''}" id="apt-grid">
-                            <!-- Cards injetados via JS -->
-                        </div>
+                        <div class="w-full ${!onlyFavorites ? 'lg:w-3/4' : ''}" id="apt-grid"></div>
                     </div>
                 `;
                 container.innerHTML = html;
@@ -381,7 +384,7 @@
                     if (building) filtered = filtered.filter(a => a.building === building);
                 }
 
-                filtered.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded)); // Padrão mais recentes
+                filtered.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded)); 
 
                 if (filtered.length === 0) {
                     grid.innerHTML = `
@@ -390,7 +393,7 @@
                                 <i class="fa-regular fa-folder-open text-4xl text-slate-400"></i>
                             </div>
                             <h3 class="text-xl font-bold text-slate-700">Nenhum apartamento encontrado</h3>
-                            <p class="text-slate-500 mt-2 max-w-md">Tente ajustar os filtros, buscar por outro bairro ou adicione novas opções ao seu catálogo.</p>
+                            <p class="text-slate-500 mt-2 max-w-md">Tente ajustar os filtros ou adicione novas opções ao seu catálogo.</p>
                             ${!onlyFavorites ? `<button onclick="app.navigate('form')" class="mt-6 bg-brand-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-brand-700 transition shadow">Adicionar Novo Imóvel</button>` : ''}
                         </div>
                     `;
@@ -403,40 +406,31 @@
                     const isCompared = this.state.compareList.includes(apt.id);
                     cardsHtml += `
                         <div class="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col relative group cursor-pointer" onclick="app.viewApt('${apt.id}')">
-                            
-                            <!-- Imagem -->
                             <div class="h-44 md:h-48 bg-slate-200 relative overflow-hidden">
                                 <img src="${apt.photo || 'https://via.placeholder.com/400x300?text=Sem+Foto'}" alt="${apt.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
                                 
-                                <!-- Tags Absolutas -->
                                 <button onclick="event.stopPropagation(); app.toggleFavorite('${apt.id}')" class="absolute top-3 right-3 h-10 w-10 bg-white/90 backdrop-blur rounded-full flex items-center justify-center text-xl shadow-sm active:scale-95 md:hover:scale-110 md:hover:bg-white transition text-${apt.favorite ? 'red-500' : 'slate-400'}">
                                     <i class="fa-${apt.favorite ? 'solid' : 'regular'} fa-heart"></i>
                                 </button>
+                                <div class="absolute top-3 left-3 px-2.5 py-1 rounded-md text-xs font-bold shadow-sm border ${this.getStatusColor(apt.status)}">
+                                    ${apt.status || 'Novo'}
+                                </div>
                                 <div class="absolute bottom-3 left-3 bg-brand-600/95 backdrop-blur text-white px-3 py-1.5 rounded-lg text-sm md:text-base font-bold shadow-lg border border-white/20">
                                     ${this.formatCurrency(apt.price)}
                                 </div>
                             </div>
 
-                            <!-- Conteúdo -->
                             <div class="p-4 md:p-5 flex-grow flex flex-col">
                                 <h3 class="font-bold text-lg text-slate-800 line-clamp-2 leading-tight mb-2" title="${apt.title}">${apt.title}</h3>
                                 ${apt.building ? `<p class="text-sm text-brand-700 font-semibold mb-1"><i class="fa-regular fa-building mr-1"></i> ${apt.building}</p>` : ''}
                                 <p class="text-sm text-slate-500 mb-3 flex items-center"><i class="fa-solid fa-location-dot w-4 text-center mr-1 text-slate-400"></i> ${apt.neighborhood}, ${apt.city}</p>
                                 
-                                <!-- Avaliações Mini -->
-                                <div class="flex flex-wrap gap-2 text-[10px] md:text-xs mb-4">
-                                    <div class="bg-slate-50 px-2 py-1 rounded border border-slate-100 flex items-center" title="Nota de Preço">
-                                        <i class="fa-solid fa-sack-dollar text-slate-400 mr-1.5"></i> ${this.renderStars(apt.ratingPrice)}
-                                    </div>
-                                    <div class="bg-slate-50 px-2 py-1 rounded border border-slate-100 flex items-center" title="Nota de Localização">
-                                        <i class="fa-solid fa-map-pin text-slate-400 mr-1.5"></i> ${this.renderStars(apt.ratingLocation)}
-                                    </div>
-                                    <div class="bg-slate-50 px-2 py-1 rounded border border-slate-100 flex items-center" title="Nota de Decoração">
-                                        <i class="fa-solid fa-couch text-slate-400 mr-1.5"></i> ${this.renderStars(apt.ratingDeco)}
-                                    </div>
+                                <!-- Características Extras (Andar e Sol) -->
+                                <div class="flex gap-2 mb-3">
+                                    ${apt.floor ? `<span class="bg-slate-100 text-slate-600 text-[10px] px-2 py-1 rounded font-medium"><i class="fa-solid fa-stairs mr-1"></i> ${apt.floor}</span>` : ''}
+                                    ${apt.sunOrientation ? `<span class="bg-amber-50 text-amber-700 text-[10px] px-2 py-1 rounded font-medium"><i class="fa-regular fa-sun mr-1"></i> Sol: ${apt.sunOrientation}</span>` : ''}
                                 </div>
 
-                                <!-- Métricas (Grid) -->
                                 <div class="grid grid-cols-3 gap-2 mb-4 border-y border-slate-100 py-3 bg-slate-50/50 rounded-lg">
                                     <div class="text-center">
                                         <div class="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">Área</div>
@@ -452,7 +446,6 @@
                                     </div>
                                 </div>
 
-                                <!-- Cadastrado por (Footer) -->
                                 <div class="mt-auto pt-1">
                                     <div class="flex justify-between items-center border-t border-slate-100 pt-3">
                                         <label class="flex items-center space-x-2 cursor-pointer group/chk py-1" onclick="event.stopPropagation()">
@@ -480,6 +473,91 @@
                 });
                 cardsHtml += `</div>`;
                 grid.innerHTML = cardsHtml;
+            },
+
+            // --- VIEW: KANBAN ---
+            renderKanban(container) {
+                let html = `
+                    <div class="mb-4">
+                        <h1 class="text-2xl md:text-3xl font-bold text-slate-800"><i class="fa-solid fa-table-columns text-brand-600 mr-2"></i> Funil de Decisão</h1>
+                        <p class="text-slate-500 mt-1 text-sm">Acompanhe e mova seus apartamentos pelo processo de escolha.</p>
+                    </div>
+                    
+                    <div class="flex overflow-x-auto gap-4 pb-4 snap-x custom-scrollbar min-h-[60vh]">
+                `;
+
+                this.state.statuses.forEach(status => {
+                    const aptsInStatus = this.state.apartments.filter(a => (a.status || 'Novo') === status);
+                    
+                    html += `
+                        <div class="kanban-col flex-shrink-0 w-72 md:w-80 bg-slate-100/50 rounded-xl p-3 border-2 border-transparent transition-colors flex flex-col snap-center" 
+                             ondragover="app.allowDrop(event)" 
+                             ondrop="app.dropOnKanban(event, '${status}')"
+                             ondragenter="this.classList.add('drag-over')"
+                             ondragleave="this.classList.remove('drag-over')">
+                             
+                            <div class="flex justify-between items-center mb-3 px-1">
+                                <h3 class="font-bold text-slate-700">${status}</h3>
+                                <span class="bg-white text-slate-500 text-xs px-2 py-0.5 rounded-full shadow-sm font-bold">${aptsInStatus.length}</span>
+                            </div>
+                            
+                            <div class="flex-grow space-y-3 overflow-y-auto custom-scrollbar" id="col-${status.replace(/\s+/g, '-')}">
+                    `;
+
+                    aptsInStatus.forEach(apt => {
+                        html += `
+                            <div class="kanban-card bg-white p-3 rounded-lg shadow-sm border border-slate-200 hover:border-brand-300 hover:shadow-md transition active:scale-[0.98]" 
+                                 draggable="true" 
+                                 ondragstart="app.dragStart(event, '${apt.id}')"
+                                 onclick="app.viewApt('${apt.id}')">
+                                <img src="${apt.photo || 'https://via.placeholder.com/200x150'}" class="w-full h-24 object-cover rounded-md mb-2 pointer-events-none">
+                                <h4 class="font-bold text-sm text-slate-800 leading-tight mb-1 truncate pointer-events-none">${apt.title}</h4>
+                                <div class="flex justify-between items-center pointer-events-none">
+                                    <span class="text-brand-600 font-bold text-sm">${this.formatCurrency(apt.price)}</span>
+                                    <span class="text-xs text-slate-500">${apt.neighborhood}</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    html += `
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `</div>`;
+                container.innerHTML = html;
+            },
+
+            // --- KANBAN LOGIC ---
+            dragStart(ev, id) {
+                ev.dataTransfer.setData("aptId", id);
+                ev.target.style.opacity = "0.5";
+            },
+            allowDrop(ev) {
+                ev.preventDefault(); // Necessário para permitir o drop
+            },
+            async dropOnKanban(ev, newStatus) {
+                ev.preventDefault();
+                const targetCol = ev.currentTarget;
+                targetCol.classList.remove('drag-over');
+                
+                const id = ev.dataTransfer.getData("aptId");
+                const apt = this.state.apartments.find(a => a.id === id);
+                
+                if (apt && apt.status !== newStatus) {
+                    apt.status = newStatus;
+                    this.renderKanban(document.getElementById('main-content')); // Re-render imediato (Otimista)
+                    
+                    // Salva no banco
+                    localStorage.setItem('meuAptoIdealData_v2', JSON.stringify(this.state.apartments));
+                    try {
+                        if (supabaseClient) {
+                            await supabaseClient.from('apartments').update({ status: newStatus }).eq('id', id);
+                        }
+                    } catch(e) { console.error("Erro ao atualizar status", e); }
+                }
             },
 
             // --- VIEW: MODAL DETALHES ---
@@ -530,6 +608,27 @@
                                 <p class="text-[9px] md:text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">IPTU/Ano</p>
                                 <p class="font-bold text-slate-800 text-xs md:text-sm">${this.formatCurrency(apt.iptu)}</p>
                             </div>
+                            ${apt.floor ? `
+                            <div class="bg-slate-50 p-2 md:p-3 rounded-xl border border-slate-100 flex flex-col items-center justify-center">
+                                <p class="text-[9px] md:text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">Andar</p>
+                                <p class="font-bold text-slate-800 text-xs md:text-sm"><i class="fa-solid fa-stairs text-brand-500 mr-1 opacity-70"></i>${apt.floor}</p>
+                            </div>` : ''}
+                            ${apt.sunOrientation ? `
+                            <div class="bg-slate-50 p-2 md:p-3 rounded-xl border border-slate-100 flex flex-col items-center justify-center">
+                                <p class="text-[9px] md:text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">Orientação Sol</p>
+                                <p class="font-bold text-slate-800 text-xs md:text-sm"><i class="fa-regular fa-sun text-amber-500 mr-1 opacity-70"></i>${apt.sunOrientation}</p>
+                            </div>` : ''}
+                        </div>
+
+                        <!-- Walk Score / POIs -->
+                        <div class="mb-6">
+                            <div class="flex justify-between items-center border-b border-slate-100 pb-1.5 mb-2">
+                                <h3 class="font-bold text-slate-800 text-sm md:text-base"><i class="fa-solid fa-map-location-dot text-brand-500 mr-1.5"></i> Região (Radar 1km)</h3>
+                                <button onclick="app.loadPOIs(${apt.lat}, ${apt.lng})" class="text-xs font-bold text-brand-600 bg-brand-50 hover:bg-brand-100 px-3 py-1.5 rounded-lg transition" id="btn-load-pois">Explorar Radar</button>
+                            </div>
+                            <div id="poi-container" class="hidden grid-cols-2 sm:grid-cols-4 gap-2">
+                                <!-- Preenchido dinamicamente -->
+                            </div>
                         </div>
 
                         <div class="mb-6">
@@ -574,6 +673,84 @@
                 modal.classList.remove('hidden');
                 modal.classList.add('flex');
                 document.body.style.overflow = 'hidden'; 
+            },
+
+            // --- POI / WALK SCORE LOGIC (Overpass API) ---
+            async loadPOIs(lat, lng) {
+                if (!lat || lat === -14.235) {
+                    Swal.fire('Sem Coordenadas', 'Ajuste o pino no mapa primeiro para buscar a região exata.', 'info');
+                    return;
+                }
+
+                const btn = document.getElementById('btn-load-pois');
+                const container = document.getElementById('poi-container');
+                btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Buscando...';
+                btn.disabled = true;
+
+                // Consulta otimizada do OpenStreetMap (Raio 1000m)
+                const query = `
+                    [out:json][timeout:15];
+                    (
+                      node["shop"~"supermarket|bakery|convenience"](around:1000,${lat},${lng});
+                      node["amenity"~"pharmacy|hospital|clinic"](around:1000,${lat},${lng});
+                      node["amenity"~"restaurant|cafe|fast_food"](around:1000,${lat},${lng});
+                      node["leisure"~"park|fitness_centre"](around:1000,${lat},${lng});
+                      node["amenity"~"school|kindergarten"](around:1000,${lat},${lng});
+                    );
+                    out tags;
+                `;
+                
+                try {
+                    const response = await fetch('https://overpass-api.de/api/interpreter', {
+                        method: 'POST',
+                        body: query
+                    });
+                    
+                    if(!response.ok) throw new Error("Falha na API");
+                    const data = await response.json();
+                    
+                    let counts = { mercados: 0, farmacias: 0, restaurantes: 0, saudeLazer: 0, escolas: 0 };
+                    
+                    data.elements.forEach(el => {
+                        const tags = el.tags;
+                        if(tags.shop && tags.shop.match(/supermarket|bakery|convenience/)) counts.mercados++;
+                        if(tags.amenity && tags.amenity.match(/pharmacy|hospital|clinic/)) counts.farmacias++;
+                        if(tags.amenity && tags.amenity.match(/restaurant|cafe|fast_food/)) counts.restaurantes++;
+                        if(tags.leisure && tags.leisure.match(/park|fitness_centre/)) counts.saudeLazer++;
+                        if(tags.amenity && tags.amenity.match(/school|kindergarten/)) counts.escolas++;
+                    });
+
+                    container.innerHTML = `
+                        <div class="bg-slate-50 border border-slate-100 rounded-lg p-2 text-center flex flex-col justify-center items-center">
+                            <i class="fa-solid fa-cart-shopping text-blue-500 mb-1 text-lg"></i>
+                            <span class="font-bold text-slate-800 text-lg leading-none">${counts.mercados}</span>
+                            <span class="text-[9px] uppercase text-slate-500 font-bold mt-1">Mercados</span>
+                        </div>
+                        <div class="bg-slate-50 border border-slate-100 rounded-lg p-2 text-center flex flex-col justify-center items-center">
+                            <i class="fa-solid fa-pills text-red-500 mb-1 text-lg"></i>
+                            <span class="font-bold text-slate-800 text-lg leading-none">${counts.farmacias}</span>
+                            <span class="text-[9px] uppercase text-slate-500 font-bold mt-1">Farmácias</span>
+                        </div>
+                        <div class="bg-slate-50 border border-slate-100 rounded-lg p-2 text-center flex flex-col justify-center items-center">
+                            <i class="fa-solid fa-utensils text-orange-500 mb-1 text-lg"></i>
+                            <span class="font-bold text-slate-800 text-lg leading-none">${counts.restaurantes}</span>
+                            <span class="text-[9px] uppercase text-slate-500 font-bold mt-1">Gastronomia</span>
+                        </div>
+                        <div class="bg-slate-50 border border-slate-100 rounded-lg p-2 text-center flex flex-col justify-center items-center">
+                            <i class="fa-solid fa-tree text-emerald-500 mb-1 text-lg"></i>
+                            <span class="font-bold text-slate-800 text-lg leading-none">${counts.saudeLazer}</span>
+                            <span class="text-[9px] uppercase text-slate-500 font-bold mt-1">Parques/Saúde</span>
+                        </div>
+                    `;
+                    container.classList.remove('hidden');
+                    container.classList.add('grid');
+                    btn.classList.add('hidden'); // Oculta botão após carregar
+
+                } catch(e) {
+                    btn.innerHTML = 'Tentar Novamente';
+                    btn.disabled = false;
+                    Swal.fire('Erro', 'Serviço de mapas indisponível no momento.', 'error');
+                }
             },
 
             closeModal(e) {
@@ -649,6 +826,27 @@
                                     <div>
                                         <label class="block text-sm font-medium text-slate-700 mb-1">Link Original (URL) *</label>
                                         <input type="url" id="form-link" required value="${apt.link || ''}" placeholder="https://..." class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-base md:text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2.5 outline-none transition">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- SEÇÃO: ESPECÍFICOS -->
+                            <div>
+                                <h3 class="font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2 text-lg"><i class="fa-solid fa-list-check text-brand-500 mr-2"></i> Detalhes Específicos</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Andar</label>
+                                        <input type="text" id="form-floor" value="${apt.floor || ''}" placeholder="Ex: 5º Andar, Térreo..." class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-base md:text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2.5 outline-none transition">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Orientação Solar</label>
+                                        <select id="form-sun" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-base md:text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2.5 outline-none transition">
+                                            <option value="">Não informado</option>
+                                            <option value="Nascente (Manhã)" ${apt.sunOrientation === 'Nascente (Manhã)' ? 'selected' : ''}>Nascente (Sol da Manhã)</option>
+                                            <option value="Poente (Tarde)" ${apt.sunOrientation === 'Poente (Tarde)' ? 'selected' : ''}>Poente (Sol da Tarde)</option>
+                                            <option value="Norte" ${apt.sunOrientation === 'Norte' ? 'selected' : ''}>Face Norte (Sol o dia todo)</option>
+                                            <option value="Sul" ${apt.sunOrientation === 'Sul' ? 'selected' : ''}>Face Sul (Pouco sol)</option>
+                                        </select>
                                     </div>
                                 </div>
                             </div>
@@ -746,11 +944,16 @@
                 const iptu = parseFloat(document.getElementById('form-iptu').value) || 0;
                 const bedrooms = parseInt(document.getElementById('form-bedrooms').value);
                 const photo = document.getElementById('form-photo').value;
+                
+                const floor = document.getElementById('form-floor').value;
+                const sunOrientation = document.getElementById('form-sun').value;
+
                 const city = document.getElementById('form-city').value;
                 const neighborhood = document.getElementById('form-neighborhood').value;
                 const address = document.getElementById('form-address').value;
                 const building = document.getElementById('form-building').value;
                 const notes = document.getElementById('form-notes').value;
+                
                 const ratingPrice = parseInt(document.getElementById('form-rating-price').value);
                 const ratingLocation = parseInt(document.getElementById('form-rating-location').value);
                 const ratingDeco = parseInt(document.getElementById('form-rating-deco').value);
@@ -788,6 +991,7 @@
 
                 const aptData = {
                     title, link, price, area, condo, iptu, bedrooms, photo,
+                    floor, sunOrientation, 
                     city, neighborhood, address, building, notes, priceM2, lat, lng,
                     ratingPrice, ratingLocation, ratingDeco, addedBy,
                     dateAdded: new Date().toISOString()
@@ -804,6 +1008,7 @@
                         const index = this.state.apartments.findIndex(a => a.id === this.state.editingId);
                         if(index !== -1) {
                             aptData.favorite = this.state.apartments[index].favorite;
+                            aptData.status = this.state.apartments[index].status;
                             aptData.dateAdded = this.state.apartments[index].dateAdded;
                             this.state.apartments[index] = aptData;
                         }
@@ -812,6 +1017,7 @@
                     } else {
                         aptData.id = crypto.randomUUID(); 
                         aptData.favorite = false;
+                        aptData.status = 'Novo'; // Estado inicial para o Kanban
                         const { error } = await supabaseClient.from('apartments').insert([aptData]);
                         if (error) throw error;
 
@@ -826,6 +1032,7 @@
                         const index = this.state.apartments.findIndex(a => a.id === this.state.editingId);
                         if(index !== -1) {
                             aptData.favorite = this.state.apartments[index].favorite;
+                            aptData.status = this.state.apartments[index].status;
                             aptData.dateAdded = this.state.apartments[index].dateAdded;
                             this.state.apartments[index] = aptData;
                         }
@@ -833,6 +1040,7 @@
                     } else {
                         aptData.id = crypto.randomUUID(); 
                         aptData.favorite = false;
+                        aptData.status = 'Novo';
                         this.state.apartments.unshift(aptData);
                     }
                 }
@@ -841,9 +1049,7 @@
                 this.navigate('list');
             },
 
-            // --- VIEW: MAP & DRAG ---
             renderMap(container) {
-                // Guarda posição se o mapa já estava aberto
                 let centerLat = -15.7801, centerLng = -47.9292, zoom = 4;
                 if (this.state.mapInstance) {
                     centerLat = this.state.mapInstance.getCenter().lat;
@@ -863,7 +1069,6 @@
                     <div class="relative">
                         <div id="map" class="shadow-lg border border-slate-200"></div>
                         
-                        <!-- Overlay de Edição de Posição -->
                         ${this.state.draggingAptId ? `
                         <div class="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] w-11/12 max-w-sm bg-white/95 backdrop-blur rounded-2xl shadow-2xl border-2 border-brand-500 p-4 text-center animate-fade-in-up">
                             <div class="w-10 h-10 bg-brand-100 text-brand-600 rounded-full flex items-center justify-center mx-auto mb-2"><i class="fa-solid fa-hand-holding-hand text-xl"></i></div>
@@ -887,7 +1092,6 @@
                     }).addTo(this.state.mapInstance);
 
                     if (this.state.draggingAptId) {
-                        // MODO EDIÇÃO (Drag)
                         const apt = this.state.apartments.find(a => a.id === this.state.draggingAptId);
                         this.state.tempDragLatLng = L.latLng(apt.lat, apt.lng);
                         this.state.mapInstance.setView(this.state.tempDragLatLng, 16);
@@ -902,13 +1106,11 @@
                         marker.on('dragend', (e) => { this.state.tempDragLatLng = e.target.getLatLng(); });
                         
                     } else {
-                        // MODO NORMAL (Clusters)
                         let bounds = [];
                         const locationMap = {};
-                        this.state.clusters = {}; // Reinicia os clusters salvos na memória
+                        this.state.clusters = {}; 
                         let clusterCounter = 0;
 
-                        // Agrupa coordenadas idênticas
                         this.state.apartments.forEach(apt => {
                             if (apt.lat && apt.lng) {
                                 const key = `${parseFloat(apt.lat).toFixed(4)},${parseFloat(apt.lng).toFixed(4)}`;
@@ -922,7 +1124,6 @@
                             const lat = parseFloat(apts[0].lat);
                             const lng = parseFloat(apts[0].lng);
                             
-                            // Cria um ID único para este pino
                             const clusterId = 'cluster_' + clusterCounter++;
                             this.state.clusters[clusterId] = apts;
 
@@ -944,8 +1145,6 @@
                             });
 
                             const marker = L.marker([lat, lng], {icon: icon}).addTo(this.state.mapInstance);
-                            
-                            // Em vez de interceptar o click, deixamos o Leaflet cuidar do popup (resolve o bug do 'X')
                             const popupWrapper = `<div id="${clusterId}" class="w-full">${this.generateClusterInnerHTML(clusterId, 0)}</div>`;
                             marker.bindPopup(popupWrapper, { className: 'custom-leaflet-popup' });
 
@@ -959,7 +1158,6 @@
                 }, 100);
             },
 
-            // --- FUNÇÕES DO CARROSSEL DO MAPA ---
             generateClusterInnerHTML(clusterId, idx) {
                 const apts = this.state.clusters[clusterId];
                 if (!apts || !apts[idx]) return '';
@@ -970,13 +1168,14 @@
                     <div class="w-full relative bg-white">
                         <div class="h-32 w-full relative">
                             <img src="${apt.photo || 'https://via.placeholder.com/400x300'}" class="w-full h-full object-cover rounded-t-xl cursor-pointer" onclick="app.viewApt('${apt.id}')">
+                            <div class="absolute top-2 left-2 px-1.5 py-0.5 rounded text-[9px] font-bold shadow border ${this.getStatusColor(apt.status)}">${apt.status || 'Novo'}</div>
                             <div class="absolute bottom-2 left-2 bg-brand-600 text-white px-2 py-1 rounded text-xs font-bold shadow">${this.formatCurrency(apt.price)}</div>
                             <div class="absolute bottom-2 right-2 bg-white/90 text-slate-800 px-2 py-1 rounded text-[10px] font-bold shadow"><i class="fa-solid fa-star text-amber-500"></i> ${avgRating}</div>
                         </div>
                         
                         <div class="p-3">
                             <h4 class="font-bold text-sm text-slate-800 leading-tight mb-1 truncate cursor-pointer hover:text-brand-600 transition" onclick="app.viewApt('${apt.id}')" title="${apt.title}">${apt.title}</h4>
-                            <p class="text-[11px] text-slate-500 mb-3"><i class="fa-solid fa-bed"></i> ${apt.bedrooms} quartos | <i class="fa-solid fa-ruler"></i> ${apt.area}m²</p>
+                            <p class="text-[11px] text-slate-500 mb-3"><i class="fa-solid fa-bed"></i> ${apt.bedrooms} qtos | <i class="fa-solid fa-ruler"></i> ${apt.area}m²</p>
                             
                             <div class="flex gap-2 mb-2">
                                 <button onclick="app.viewApt('${apt.id}')" class="flex-1 bg-brand-50 active:bg-brand-100 text-brand-700 text-xs font-bold py-2 rounded-lg transition border border-brand-100">Detalhes</button>
@@ -985,7 +1184,6 @@
                             
                             ${apts.length > 1 ? `
                             <div class="flex items-center justify-between border-t border-slate-100 pt-2 mt-1">
-                                <!-- event.stopPropagation() adicionado aqui previne o bug do card sumir -->
                                 <button onclick="event.stopPropagation(); app.changeClusterPage('${clusterId}', ${idx - 1})" class="w-6 h-6 rounded-full bg-slate-100 active:bg-slate-200 flex items-center justify-center text-slate-600"><i class="fa-solid fa-chevron-left text-[10px]"></i></button>
                                 <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">${idx + 1} de ${apts.length}</span>
                                 <button onclick="event.stopPropagation(); app.changeClusterPage('${clusterId}', ${idx + 1})" class="w-6 h-6 rounded-full bg-slate-100 active:bg-slate-200 flex items-center justify-center text-slate-600"><i class="fa-solid fa-chevron-right text-[10px]"></i></button>
@@ -1005,14 +1203,12 @@
                 
                 const container = document.getElementById(clusterId);
                 if (container) {
-                    // Substitui apenas o miolo do HTML, sem quebrar o popup do Leaflet
                     container.innerHTML = this.generateClusterInnerHTML(clusterId, newIdx);
                 }
             },
 
-            // --- LÓGICA DE DRAG & DROP DO PINO ---
             startDraggingApt(id) {
-                this.closeModal(); // Caso chame do modal
+                this.closeModal(); 
                 this.state.draggingAptId = id;
                 this.navigate('map'); 
             },
@@ -1020,7 +1216,7 @@
             cancelDragging() {
                 this.state.draggingAptId = null;
                 this.state.tempDragLatLng = null;
-                this.navigate('map'); // Redesenha normal
+                this.navigate('map'); 
             },
 
             async saveDraggedApt() {
@@ -1141,6 +1337,15 @@
                                         `;
                                     }).join('')}
                                 </tr>
+                                <tr class="hover:bg-slate-50">
+                                    <td class="p-3 md:p-4 font-semibold text-slate-700 border-r border-slate-200 bg-slate-50 sticky left-0 z-10 shadow-[1px_0_0_0_#e2e8f0]">Extras</td>
+                                    ${apts.map(a => `
+                                        <td class="p-3 md:p-4 text-slate-700 text-xs">
+                                            <div>Andar: <span class="font-medium">${a.floor || '-'}</span></div>
+                                            <div>Sol: <span class="font-medium">${a.sunOrientation || '-'}</span></div>
+                                        </td>
+                                    `).join('')}
+                                </tr>
                                 
                                 <tr>
                                     <td colspan="${apts.length + 1}" class="bg-slate-100 p-2 font-bold text-xs text-slate-500 uppercase tracking-wider text-center sticky left-0">Suas Avaliações</td>
@@ -1191,7 +1396,6 @@
                 container.innerHTML = html;
             },
 
-            // --- UTILS & ACTIONS ---
             formatCurrency(value) {
                 return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
             },
@@ -1299,7 +1503,6 @@
                 this.renderList(document.getElementById('main-content'), this.state.view === 'favorites');
             },
 
-            // --- AI INTEGRATION ---
             async openAIModal() {
                 const { value: text } = await Swal.fire({
                     title: '<i class="fa-solid fa-wand-magic-sparkles text-brand-600"></i> Extração com IA',
@@ -1354,8 +1557,10 @@
                                 city: { type: "STRING", description: "O nome da cidade do imóvel." },
                                 neighborhood: { type: "STRING", description: "O bairro onde o imóvel está localizado." },
                                 address: { type: "STRING", description: "O endereço (rua, avenida) se estiver disponível." },
-                                building: { type: "STRING", description: "O nome do edifício, residencial ou condomínio, se for mencionado (Ex: Edifício Bella Vista, Residencial Timbó)." },
-                                notes: { type: "STRING", description: "Um resumo descritivo em texto destacando as principais características, móveis, áreas de lazer, infraestrutura e observações importantes." }
+                                building: { type: "STRING", description: "O nome do edifício, residencial ou condomínio." },
+                                floor: { type: "STRING", description: "Andar do apartamento (ex: 5º andar, Térreo)." },
+                                sunOrientation: { type: "STRING", description: "Orientação solar (Nascente, Poente, Face Norte, Face Sul)." },
+                                notes: { type: "STRING", description: "Um resumo descritivo destacando principais características e móveis." }
                             }
                         }
                     }
@@ -1408,25 +1613,30 @@
                 if (data.neighborhood) document.getElementById('form-neighborhood').value = data.neighborhood;
                 if (data.address) document.getElementById('form-address').value = data.address;
                 if (data.building) document.getElementById('form-building').value = data.building;
+                if (data.floor) document.getElementById('form-floor').value = data.floor;
+                if (data.sunOrientation) {
+                    const sel = document.getElementById('form-sun');
+                    const text = data.sunOrientation.toLowerCase();
+                    if(text.includes('nasc')) sel.value = 'Nascente (Manhã)';
+                    else if(text.includes('poen')) sel.value = 'Poente (Tarde)';
+                    else if(text.includes('nort')) sel.value = 'Norte';
+                    else if(text.includes('sul')) sel.value = 'Sul';
+                }
                 if (data.notes) document.getElementById('form-notes').value = data.notes;
             },
 
             getSampleData() {
                 return [
                     {
-                        id: "1", title: "Lindo Apto 2 quartos em Pinheiros", link: "https://exemplo.com", price: 650000, condo: 550, iptu: 120, city: "São Paulo", neighborhood: "Pinheiros", address: "Rua Teodoro Sampaio, 1000", photo: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80", bedrooms: 2, area: 65, priceM2: 10000, notes: "Bem localizado, perto do metrô. Precisa reformar a cozinha.", lat: -23.5645, lng: -46.6834, favorite: true, ratingPrice: 4, ratingLocation: 5, ratingDeco: 2, addedBy: "João Silva", dateAdded: new Date(Date.now() - 86400000).toISOString()
+                        id: "1", title: "Lindo Apto 2 quartos em Pinheiros", link: "https://exemplo.com", price: 650000, condo: 550, iptu: 120, city: "São Paulo", neighborhood: "Pinheiros", address: "Rua Teodoro Sampaio, 1000", photo: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80", bedrooms: 2, area: 65, priceM2: 10000, notes: "Bem localizado, perto do metrô. Precisa reformar a cozinha.", lat: -23.5645, lng: -46.6834, favorite: true, ratingPrice: 4, ratingLocation: 5, ratingDeco: 2, addedBy: "João Silva", status: "Visita Agendada", floor: "3º Andar", sunOrientation: "Norte", dateAdded: new Date(Date.now() - 86400000).toISOString()
                     },
                     {
-                        id: "2", title: "Apartamento com Varanda Gourmet", link: "https://exemplo.com", price: 850000, condo: 800, iptu: 200, city: "São Paulo", neighborhood: "Vila Mariana", address: "Rua Domingos de Morais", photo: "https://images.unsplash.com/photo-1502672260266-1c1e5240980c?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80", bedrooms: 3, area: 90, priceM2: 9444.44, notes: "Prédio novo com piscina e academia. Sol da tarde.", lat: -23.5891, lng: -46.6341, favorite: false, ratingPrice: 3, ratingLocation: 4, ratingDeco: 5, addedBy: "Maria Clara", dateAdded: new Date().toISOString()
-                    },
-                    {
-                        id: "3", title: "Kitnet mobiliada no Centro", link: "https://exemplo.com", price: 280000, condo: 300, iptu: 50, city: "São Paulo", neighborhood: "Centro Histórico", address: "Av. Ipiranga", photo: "https://images.unsplash.com/photo-1493809842364-78817add7ffb?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80", bedrooms: 1, area: 35, priceM2: 8000, notes: "Ótimo para investir e alugar. Sem garagem.", lat: -23.5432, lng: -46.6417, favorite: false, ratingPrice: 5, ratingLocation: 3, ratingDeco: 4, addedBy: "João Silva", dateAdded: new Date(Date.now() - 172800000).toISOString()
+                        id: "2", title: "Apartamento com Varanda Gourmet", link: "https://exemplo.com", price: 850000, condo: 800, iptu: 200, city: "São Paulo", neighborhood: "Vila Mariana", address: "Rua Domingos de Morais", photo: "https://images.unsplash.com/photo-1502672260266-1c1e5240980c?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80", bedrooms: 3, area: 90, priceM2: 9444.44, notes: "Prédio novo com piscina e academia. Sol da tarde.", lat: -23.5891, lng: -46.6341, favorite: false, ratingPrice: 3, ratingLocation: 4, ratingDeco: 5, addedBy: "Maria Clara", status: "Novo", floor: "10º Andar", sunOrientation: "Poente (Tarde)", dateAdded: new Date().toISOString()
                     }
                 ];
             }
         };
 
-        // Initialize App on load
         document.addEventListener('DOMContentLoaded', () => {
             app.init();
         });
