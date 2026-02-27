@@ -2,7 +2,6 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <!-- Bloqueio de zoom para melhorar a experiência no mobile (parecer mais com app nativo) -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Meu Apto Ideal</title>
     
@@ -20,7 +19,7 @@
                             300: '#6ee7b7',
                             400: '#34d399',
                             500: '#10b981',
-                            600: '#059669', /* Nova cor principal: Verde Esmeralda/Teal */
+                            600: '#059669', /* Verde Esmeralda/Teal */
                             700: '#047857',
                             800: '#065f46',
                             900: '#064e3b',
@@ -44,10 +43,10 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        /* Estilos adicionais para mapa e scrollbar */
+        /* Mapa e Elementos de Interface */
         #map { height: 600px; width: 100%; z-index: 10; border-radius: 0.5rem; }
         @media (max-width: 768px) {
-            #map { height: 450px; } /* Mapa um pouco menor no mobile para não prender o scroll */
+            #map { height: calc(100vh - 220px); min-height: 400px; } 
         }
         
         .custom-scrollbar::-webkit-scrollbar { height: 8px; width: 8px; }
@@ -56,18 +55,19 @@
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         
-        /* Ajuste extra para selects no mobile e remoção de double-tap zoom e flash de clique */
+        /* Ajustes Leaflet Popup para o modo Card/Carrossel Premium */
+        .custom-leaflet-popup .leaflet-popup-content-wrapper { padding: 0 !important; overflow: hidden; border-radius: 0.75rem; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2); }
+        .custom-leaflet-popup .leaflet-popup-content { margin: 0 !important; width: 280px !important; }
+        @media (min-width: 768px) { .custom-leaflet-popup .leaflet-popup-content { width: 320px !important; } }
+        /* X de fechar por cima da imagem */
+        .custom-leaflet-popup .leaflet-popup-close-button { color: white !important; background: rgba(0,0,0,0.4) !important; border-radius: 50%; width: 24px !important; height: 24px !important; text-align: center; line-height: 24px !important; right: 10px !important; top: 10px !important; z-index: 20; text-decoration: none; font-weight: bold; font-family: sans-serif; transition: background 0.3s; padding: 0 !important;}
+        .custom-leaflet-popup .leaflet-popup-close-button:hover { background: rgba(0,0,0,0.7) !important; }
+        
+        /* Ajuste de select para mobile */
         select { appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 0.5rem center; background-size: 1em; padding-right: 2.5rem !important; }
         
-        body {
-            -webkit-tap-highlight-color: transparent;
-            touch-action: manipulation;
-        }
-
-        /* Suavidade no scroll horizontal no mobile */
-        .overflow-x-auto {
-            -webkit-overflow-scrolling: touch;
-        }
+        body { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+        .overflow-x-auto { -webkit-overflow-scrolling: touch; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col pb-20 md:pb-0">
@@ -142,7 +142,6 @@
     </footer>
 
     <!-- Modal de Detalhes -->
-    <!-- overflow-hidden no wrapper do modal e overflow-y-auto e overflow-x-hidden no container branco evitam rolagem lateral -->
     <div id="apt-modal" class="fixed inset-0 bg-slate-900/70 z-[100] hidden items-center justify-center p-4 backdrop-blur-sm transition-opacity overflow-hidden" onclick="app.closeModal(event)">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto overflow-x-hidden flex flex-col relative animate-fade-in-up custom-scrollbar" onclick="event.stopPropagation()">
             <!-- Injetado dinamicamente -->
@@ -175,7 +174,12 @@
                 filters: { searchTitle: '', neighborhood: '', building: '' },
                 sortBy: 'dateDesc',
                 editingId: null,
-                mapInstance: null
+                mapInstance: null,
+                // Variáveis para edição de posição no mapa
+                draggingAptId: null,
+                tempDragLatLng: null,
+                // Variáveis para Carrossel do Popup do Mapa
+                clusters: {} // Armazena os grupos de apartamentos por ID
             },
 
             async init() {
@@ -242,9 +246,14 @@
 
             // --- ROUTING & RENDERING ---
             navigate(view) {
+                // Previne sair se estiver movendo o pino no mapa
+                if(this.state.draggingAptId && view !== 'map') {
+                    Swal.fire('Ação Pendente', 'Salve ou cancele a posição do pino primeiro.', 'warning');
+                    return;
+                }
+
                 this.state.view = view;
                 
-                // Update Desktop Nav
                 document.querySelectorAll('.nav-btn').forEach(btn => {
                     if(btn.dataset.target === view) {
                         btn.classList.add('bg-brand-900', 'text-white');
@@ -255,7 +264,6 @@
                     }
                 });
 
-                // Update Mobile Nav
                 document.querySelectorAll('.nav-btn-mobile').forEach(btn => {
                     if(btn.dataset.target === view && view !== 'form') {
                         btn.classList.add('text-brand-600');
@@ -281,11 +289,9 @@
                     case 'compare': this.renderCompare(content); break;
                 }
                 
-                // Scroll to top on navigation
                 window.scrollTo(0,0);
             },
 
-            // --- HELPER: RENDER STARS ---
             renderStars(rating) {
                 let html = '';
                 for(let i=1; i<=5; i++) {
@@ -375,20 +381,7 @@
                     if (building) filtered = filtered.filter(a => a.building === building);
                 }
 
-                filtered.sort((a, b) => {
-                    switch(this.state.sortBy) {
-                        case 'priceAsc': return a.price - b.price;
-                        case 'priceDesc': return b.price - a.price;
-                        case 'priceM2Asc': return a.priceM2 - b.priceM2;
-                        case 'areaDesc': return b.area - a.area;
-                        case 'ratingDesc': 
-                            const avgA = (parseInt(a.ratingPrice||0) + parseInt(a.ratingLocation||0) + parseInt(a.ratingDeco||0))/3;
-                            const avgB = (parseInt(b.ratingPrice||0) + parseInt(b.ratingLocation||0) + parseInt(b.ratingDeco||0))/3;
-                            return avgB - avgA;
-                        case 'dateDesc': return new Date(b.dateAdded) - new Date(a.dateAdded);
-                        default: return 0;
-                    }
-                });
+                filtered.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded)); // Padrão mais recentes
 
                 if (filtered.length === 0) {
                     grid.innerHTML = `
@@ -461,13 +454,6 @@
 
                                 <!-- Cadastrado por (Footer) -->
                                 <div class="mt-auto pt-1">
-                                    <div class="flex items-center text-xs text-slate-500 mb-3">
-                                        <div class="w-5 h-5 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center mr-2">
-                                            <i class="fa-solid fa-user text-[10px]"></i>
-                                        </div>
-                                        Cadastrado por: <span class="font-semibold text-slate-700 ml-1 truncate">${apt.addedBy || 'Você'}</span>
-                                    </div>
-
                                     <div class="flex justify-between items-center border-t border-slate-100 pt-3">
                                         <label class="flex items-center space-x-2 cursor-pointer group/chk py-1" onclick="event.stopPropagation()">
                                             <input type="checkbox" class="w-5 h-5 rounded border-slate-300 text-brand-600 focus:ring-brand-500 transition" 
@@ -504,23 +490,21 @@
                 const avgRating = ((parseInt(apt.ratingPrice||3) + parseInt(apt.ratingLocation||3) + parseInt(apt.ratingDeco||3))/3).toFixed(1);
 
                 document.getElementById('modal-content-inject').innerHTML = `
-                    <!-- Header c/ Imagem -->
                     <div class="h-48 md:h-64 w-full relative bg-slate-200 shrink-0">
                         <img src="${apt.photo || 'https://via.placeholder.com/800x600?text=Sem+Foto'}" class="w-full h-full object-cover" alt="Foto">
                         <button onclick="app.closeModal(event)" class="absolute top-4 right-4 bg-white/90 backdrop-blur w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center text-slate-800 hover:bg-white shadow-lg transition z-10">
                             <i class="fa-solid fa-xmark text-lg md:text-xl"></i>
                         </button>
                         <div class="absolute bottom-4 left-4 right-4 flex flex-col md:flex-row gap-2 items-start md:items-end pointer-events-none">
-                            <div class="bg-brand-600 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-bold shadow-lg text-base md:text-lg border border-white/20 pointer-events-auto max-w-full overflow-hidden text-ellipsis whitespace-nowrap">
+                            <div class="bg-brand-600 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-bold shadow-lg text-base md:text-lg border border-white/20 pointer-events-auto">
                                 ${this.formatCurrency(apt.price)}
                             </div>
-                            <div class="bg-white/95 backdrop-blur text-slate-800 px-2 py-1 md:px-3 md:py-1.5 rounded-lg font-bold shadow-lg text-xs md:text-sm border border-slate-200 pointer-events-auto whitespace-nowrap">
+                            <div class="bg-white/95 backdrop-blur text-slate-800 px-2 py-1 md:px-3 md:py-1.5 rounded-lg font-bold shadow-lg text-xs md:text-sm border border-slate-200 pointer-events-auto">
                                 ${this.formatCurrency(apt.priceM2).replace(',00', '')}/m²
                             </div>
                         </div>
                     </div>
 
-                    <!-- Conteúdo Interno -->
                     <div class="p-4 md:p-6 flex-grow">
                         <div class="flex justify-between items-start mb-2">
                             <h2 class="text-lg md:text-xl font-bold text-slate-800 leading-tight">${apt.title}</h2>
@@ -529,7 +513,6 @@
                         ${apt.building ? `<p class="text-brand-700 font-semibold mb-2 text-sm"><i class="fa-regular fa-building mr-1"></i> Edifício: ${apt.building}</p>` : ''}
                         <p class="text-slate-500 mb-5 text-xs md:text-sm"><i class="fa-solid fa-location-dot mr-1 text-slate-400"></i> ${apt.address ? apt.address + ' - ' : ''}${apt.neighborhood}, ${apt.city}</p>
 
-                        <!-- Grid Principal de Dados -->
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 md:gap-3 mb-6">
                             <div class="bg-slate-50 p-2 md:p-3 rounded-xl border border-slate-100 flex flex-col items-center justify-center">
                                 <p class="text-[9px] md:text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">Área Útil</p>
@@ -549,7 +532,6 @@
                             </div>
                         </div>
 
-                        <!-- Avaliações Pessoais -->
                         <div class="mb-6">
                             <h3 class="font-bold text-slate-800 text-sm md:text-base mb-2 border-b border-slate-100 pb-1.5 flex items-center">
                                 <i class="fa-solid fa-star-half-stroke text-amber-500 mr-1.5"></i> Notas Pessoais (Média: ${avgRating})
@@ -570,7 +552,6 @@
                             </div>
                         </div>
 
-                        <!-- Observações do Anúncio -->
                         <div class="mb-6">
                             <h3 class="font-bold text-slate-800 text-sm md:text-base mb-2 border-b border-slate-100 pb-1.5"><i class="fa-solid fa-clipboard-list text-brand-500 mr-1.5"></i> Observações</h3>
                             <div class="bg-amber-50/50 p-3 rounded-xl border border-amber-100">
@@ -578,11 +559,13 @@
                             </div>
                         </div>
 
-                        <!-- Footer do Modal (Ações) -->
-                        <div class="flex flex-col gap-2 pt-3 border-t border-slate-100">
-                            <a href="${apt.link}" target="_blank" class="w-full text-center bg-brand-600 hover:bg-brand-700 text-white font-bold py-2.5 md:py-3 rounded-xl shadow-md transition-colors text-sm md:text-base flex items-center justify-center">
-                                Ir para o Anúncio Original <i class="fa-solid fa-arrow-up-right-from-square ml-2"></i>
+                        <div class="flex flex-col sm:flex-row gap-2 pt-3 border-t border-slate-100">
+                            <a href="${apt.link}" target="_blank" class="flex-1 text-center bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 rounded-xl shadow-md transition-colors text-sm md:text-base flex items-center justify-center">
+                                Ir para Anúncio <i class="fa-solid fa-arrow-up-right-from-square ml-2"></i>
                             </a>
+                            <button onclick="app.startDraggingApt('${apt.id}')" class="flex-1 text-center bg-white border-2 border-brand-200 hover:border-brand-500 text-brand-700 font-bold py-3 rounded-xl shadow-sm transition-colors text-sm md:text-base flex items-center justify-center">
+                                <i class="fa-solid fa-up-down-left-right mr-2"></i> Ajustar Pino no Mapa
+                            </button>
                         </div>
                     </div>
                 `;
@@ -590,17 +573,15 @@
                 const modal = document.getElementById('apt-modal');
                 modal.classList.remove('hidden');
                 modal.classList.add('flex');
-                document.body.style.overflow = 'hidden'; // Evita que role a tela por trás do modal
+                document.body.style.overflow = 'hidden'; 
             },
 
             closeModal(e) {
-                // Previne que feche se clicar "dentro" do conteúdo branco do modal (somente fora no black bg ou no X)
                 if(e && e.target !== e.currentTarget && !e.target.closest('button')) return;
-
                 const modal = document.getElementById('apt-modal');
                 modal.classList.add('hidden');
                 modal.classList.remove('flex');
-                document.body.style.overflow = ''; // Restaura o scroll da tela normal
+                document.body.style.overflow = ''; 
             },
 
             // --- VIEW: FORM (ADD / EDIT) ---
@@ -757,7 +738,6 @@
             },
 
             async saveApartment() {
-                // Get form values
                 const title = document.getElementById('form-title').value;
                 const link = document.getElementById('form-link').value;
                 const price = parseFloat(document.getElementById('form-price').value);
@@ -771,8 +751,6 @@
                 const address = document.getElementById('form-address').value;
                 const building = document.getElementById('form-building').value;
                 const notes = document.getElementById('form-notes').value;
-                
-                // New Rating & User Fields
                 const ratingPrice = parseInt(document.getElementById('form-rating-price').value);
                 const ratingLocation = parseInt(document.getElementById('form-rating-location').value);
                 const ratingDeco = parseInt(document.getElementById('form-rating-deco').value);
@@ -780,21 +758,32 @@
 
                 const priceM2 = price / area;
 
-                Swal.fire({ title: 'Salvando...', text: 'Buscando coordenadas e enviando para a nuvem...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                Swal.fire({ title: 'Salvando...', text: 'Verificando coordenadas e enviando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
                 let lat = null, lng = null;
-                const geoQuery = address ? `${address}, ${city}, Brazil` : `${neighborhood}, ${city}, Brazil`;
-                try {
-                    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(geoQuery)}`);
-                    const data = await res.json();
-                    if(data && data.length > 0) {
-                        lat = parseFloat(data[0].lat);
-                        lng = parseFloat(data[0].lon);
-                    } else {
+                
+                if (this.state.editingId) {
+                    const existingApt = this.state.apartments.find(a => a.id === this.state.editingId);
+                    if(existingApt && existingApt.lat) {
+                        lat = existingApt.lat;
+                        lng = existingApt.lng;
+                    }
+                }
+                
+                if (!lat) {
+                    const geoQuery = address ? `${address}, ${city}, Brazil` : `${neighborhood}, ${city}, Brazil`;
+                    try {
+                        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(geoQuery)}`);
+                        const data = await res.json();
+                        if(data && data.length > 0) {
+                            lat = parseFloat(data[0].lat);
+                            lng = parseFloat(data[0].lon);
+                        } else {
+                            lat = -14.235; lng = -51.925;
+                        }
+                    } catch(e) {
                         lat = -14.235; lng = -51.925;
                     }
-                } catch(e) {
-                    lat = -14.235; lng = -51.925;
                 }
 
                 const aptData = {
@@ -809,8 +798,6 @@
 
                     if (this.state.editingId) {
                         aptData.id = this.state.editingId;
-                        
-                        // Envia atualização (Update) para o Supabase
                         const { error } = await supabaseClient.from('apartments').update(aptData).eq('id', this.state.editingId);
                         if (error) throw error;
 
@@ -821,24 +808,19 @@
                             this.state.apartments[index] = aptData;
                         }
                         this.state.editingId = null;
-                        Swal.fire({icon: 'success', title: 'Atualizado!', text: 'Salvo com sucesso no banco de dados.', timer: 1500, showConfirmButton: false});
+                        Swal.fire({icon: 'success', title: 'Atualizado!', text: 'Salvo com sucesso.', timer: 1500, showConfirmButton: false});
                     } else {
-                        // Novo registro: Gera ID Universal (UUID)
                         aptData.id = crypto.randomUUID(); 
                         aptData.favorite = false;
-                        
-                        // Insere (Insert) no Supabase
                         const { error } = await supabaseClient.from('apartments').insert([aptData]);
                         if (error) throw error;
 
                         this.state.apartments.unshift(aptData);
-                        Swal.fire({icon: 'success', title: 'Cadastrado!', text: 'Imóvel salvo na nuvem com sucesso.', timer: 1500, showConfirmButton: false});
+                        Swal.fire({icon: 'success', title: 'Cadastrado!', text: 'Imóvel salvo.', timer: 1500, showConfirmButton: false});
                     }
                 } catch (error) {
-                    console.error("Erro ao salvar no Supabase:", error);
-                    Swal.fire({icon: 'warning', title: 'Aviso', text: 'Salvo apenas localmente (Supabase offline).', timer: 2000, showConfirmButton: false});
-                    
-                    // Fallback Local
+                    console.error("Erro ao salvar:", error);
+                    Swal.fire({icon: 'warning', title: 'Aviso', text: 'Salvo localmente (Offline).', timer: 2000, showConfirmButton: false});
                     if (this.state.editingId) {
                         aptData.id = this.state.editingId;
                         const index = this.state.apartments.findIndex(a => a.id === this.state.editingId);
@@ -855,114 +837,222 @@
                     }
                 }
 
-                // Sempre salva localmente como backup contínuo
                 localStorage.setItem('meuAptoIdealData_v2', JSON.stringify(this.state.apartments));
-
                 this.navigate('list');
             },
 
-            // --- VIEW: MAP ---
+            // --- VIEW: MAP & DRAG ---
             renderMap(container) {
-                container.innerHTML = `
-                    <div class="mb-4">
-                        <h1 class="text-2xl md:text-3xl font-bold text-slate-800"><i class="fa-solid fa-map-location-dot text-brand-600 mr-2"></i> Mapa de Imóveis</h1>
-                        <p class="text-slate-500 text-sm md:text-base mt-1">Visualize a localização de todos os apartamentos cadastrados.</p>
-                    </div>
-                    <div id="map" class="shadow-lg border border-slate-200"></div>
-                `;
-
-                let centerLat = -15.7801; 
-                let centerLng = -47.9292;
-                let zoom = 4;
-
-                if (this.state.apartments.length > 0) {
+                // Guarda posição se o mapa já estava aberto
+                let centerLat = -15.7801, centerLng = -47.9292, zoom = 4;
+                if (this.state.mapInstance) {
+                    centerLat = this.state.mapInstance.getCenter().lat;
+                    centerLng = this.state.mapInstance.getCenter().lng;
+                    zoom = this.state.mapInstance.getZoom();
+                } else if (this.state.apartments.length > 0) {
                     const validApt = this.state.apartments.find(a => a.lat && a.lat !== -14.235);
-                    if (validApt) {
-                        centerLat = validApt.lat;
-                        centerLng = validApt.lng;
-                        zoom = 12;
-                    }
+                    if (validApt) { centerLat = validApt.lat; centerLng = validApt.lng; zoom = 12; }
                 }
 
+                container.innerHTML = `
+                    <div class="mb-4 ${this.state.draggingAptId ? 'hidden' : 'block'}">
+                        <h1 class="text-2xl md:text-3xl font-bold text-slate-800"><i class="fa-solid fa-map-location-dot text-brand-600 mr-2"></i> Mapa de Imóveis</h1>
+                        <p class="text-slate-500 text-sm md:text-base mt-1">Clique num local para ver os imóveis cadastrados na região.</p>
+                    </div>
+                    
+                    <div class="relative">
+                        <div id="map" class="shadow-lg border border-slate-200"></div>
+                        
+                        <!-- Overlay de Edição de Posição -->
+                        ${this.state.draggingAptId ? `
+                        <div class="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] w-11/12 max-w-sm bg-white/95 backdrop-blur rounded-2xl shadow-2xl border-2 border-brand-500 p-4 text-center animate-fade-in-up">
+                            <div class="w-10 h-10 bg-brand-100 text-brand-600 rounded-full flex items-center justify-center mx-auto mb-2"><i class="fa-solid fa-hand-holding-hand text-xl"></i></div>
+                            <h3 class="font-bold text-slate-800 text-lg leading-tight mb-1">Ajuste o Local</h3>
+                            <p class="text-xs text-slate-500 mb-4">Arraste o pino vermelho no mapa para a localização exata do imóvel.</p>
+                            <div class="flex gap-2">
+                                <button onclick="app.cancelDragging()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl transition text-sm">Cancelar</button>
+                                <button onclick="app.saveDraggedApt()" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white font-bold py-2.5 rounded-xl transition text-sm shadow-md">Salvar Local</button>
+                            </div>
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+
                 setTimeout(() => {
-                    this.state.mapInstance = L.map('map').setView([centerLat, centerLng], zoom);
+                    this.state.mapInstance = L.map('map', {zoomControl: false}).setView([centerLat, centerLng], zoom);
+                    L.control.zoom({ position: 'bottomright' }).addTo(this.state.mapInstance);
 
                     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                         attribution: '&copy; OpenStreetMap contributors'
                     }).addTo(this.state.mapInstance);
 
-                    let bounds = [];
-                    const locationMap = {};
+                    if (this.state.draggingAptId) {
+                        // MODO EDIÇÃO (Drag)
+                        const apt = this.state.apartments.find(a => a.id === this.state.draggingAptId);
+                        this.state.tempDragLatLng = L.latLng(apt.lat, apt.lng);
+                        this.state.mapInstance.setView(this.state.tempDragLatLng, 16);
 
-                    // Agrupa apartamentos que têm coordenadas (lat/lng) idênticas ou muito próximas (4 casas decimais = ~11 metros)
-                    this.state.apartments.forEach(apt => {
-                        if (apt.lat && apt.lng) {
-                            const key = `${parseFloat(apt.lat).toFixed(4)},${parseFloat(apt.lng).toFixed(4)}`;
-                            if (!locationMap[key]) locationMap[key] = [];
-                            locationMap[key].push(apt);
-                        }
-                    });
-
-                    // Cria os marcadores (simples ou agrupados)
-                    for (const key in locationMap) {
-                        const apts = locationMap[key];
-                        const [latStr, lngStr] = key.split(',');
-                        const lat = parseFloat(latStr);
-                        const lng = parseFloat(lngStr);
-
-                        // Icone Dinâmico
-                        let iconHtml = `<div class="bg-brand-600 text-white w-8 h-8 flex items-center justify-center rounded-full shadow-lg border-2 border-white"><i class="fa-solid fa-house text-sm"></i></div>`;
-                        
-                        if (apts.length > 1) {
-                            // Se houver mais de um, vira um ícone de prédio com a contagem (badge)
-                            iconHtml = `
-                            <div class="relative bg-brand-700 text-white w-9 h-9 flex items-center justify-center rounded-full shadow-lg border-2 border-white">
-                                <i class="fa-solid fa-building text-sm"></i>
-                                <div class="absolute -top-2 -right-2 bg-amber-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border border-white shadow-sm">${apts.length}</div>
-                            </div>`;
-                        }
-
-                        const icon = L.divIcon({
+                        const dragIcon = L.divIcon({
                             className: 'custom-div-icon',
-                            html: iconHtml,
-                            iconSize: [apts.length > 1 ? 36 : 32, apts.length > 1 ? 36 : 32],
-                            iconAnchor: [apts.length > 1 ? 18 : 16, apts.length > 1 ? 36 : 32],
-                            popupAnchor: [0, apts.length > 1 ? -36 : -32]
+                            html: `<div class="bg-red-500 text-white w-12 h-12 flex items-center justify-center rounded-full shadow-2xl border-4 border-white animate-bounce"><i class="fa-solid fa-location-dot text-xl"></i></div>`,
+                            iconSize: [48, 48], iconAnchor: [24, 48]
                         });
 
-                        // Popup Dinâmico
-                        let popupContent = `<div class="w-48 md:w-56 font-sans max-h-64 overflow-y-auto custom-scrollbar pr-1">`;
-                        if (apts.length > 1) {
-                            popupContent += `<h4 class="font-bold text-sm text-slate-800 mb-2 pb-1 border-b border-slate-200"><i class="fa-solid fa-layer-group text-brand-500 mr-1"></i> ${apts.length} Imóveis neste local</h4>`;
-                        }
+                        const marker = L.marker([apt.lat, apt.lng], {icon: dragIcon, draggable: true}).addTo(this.state.mapInstance);
+                        marker.on('dragend', (e) => { this.state.tempDragLatLng = e.target.getLatLng(); });
                         
-                        apts.forEach((apt, index) => {
-                            const avgRating = ((parseInt(apt.ratingPrice||3) + parseInt(apt.ratingLocation||3) + parseInt(apt.ratingDeco||3))/3).toFixed(1);
-                            popupContent += `
-                                <div class="${index > 0 ? 'mt-3 pt-3 border-t border-slate-100' : ''}">
-                                    <img src="${apt.photo || 'https://via.placeholder.com/200x150'}" class="w-full h-20 object-cover rounded mb-2 cursor-pointer hover:opacity-90 transition" onclick="app.viewApt('${apt.id}')">
-                                    <h4 class="font-bold text-[11px] text-slate-800 leading-tight mb-1 truncate cursor-pointer hover:text-brand-600 transition" onclick="app.viewApt('${apt.id}')" title="${apt.title}">${apt.title}</h4>
-                                    <div class="flex justify-between items-center mb-1">
-                                        <p class="text-brand-600 font-bold text-xs">${this.formatCurrency(apt.price)}</p>
-                                        <div class="text-[9px] text-amber-500"><i class="fa-solid fa-star"></i> ${avgRating}</div>
-                                    </div>
-                                    <p class="text-[10px] text-slate-500 mb-2"><i class="fa-solid fa-bed"></i> ${apt.bedrooms} | <i class="fa-solid fa-ruler"></i> ${apt.area}m²</p>
-                                    <button onclick="app.viewApt('${apt.id}')" class="block w-full text-center bg-brand-50 hover:bg-brand-100 text-brand-700 text-[10px] font-bold py-1.5 rounded transition shadow-sm border border-brand-100">Ver Detalhes</button>
-                                </div>
-                            `;
+                    } else {
+                        // MODO NORMAL (Clusters)
+                        let bounds = [];
+                        const locationMap = {};
+                        this.state.clusters = {}; // Reinicia os clusters salvos na memória
+                        let clusterCounter = 0;
+
+                        // Agrupa coordenadas idênticas
+                        this.state.apartments.forEach(apt => {
+                            if (apt.lat && apt.lng) {
+                                const key = `${parseFloat(apt.lat).toFixed(4)},${parseFloat(apt.lng).toFixed(4)}`;
+                                if (!locationMap[key]) locationMap[key] = [];
+                                locationMap[key].push(apt);
+                            }
                         });
-                        popupContent += `</div>`;
 
-                        const marker = L.marker([lat, lng], {icon: icon}).addTo(this.state.mapInstance);
-                        marker.bindPopup(popupContent);
-                        bounds.push([lat, lng]);
-                    }
+                        for (const key in locationMap) {
+                            const apts = locationMap[key];
+                            const lat = parseFloat(apts[0].lat);
+                            const lng = parseFloat(apts[0].lng);
+                            
+                            // Cria um ID único para este pino
+                            const clusterId = 'cluster_' + clusterCounter++;
+                            this.state.clusters[clusterId] = apts;
 
-                    if (bounds.length > 0) {
-                        this.state.mapInstance.fitBounds(bounds, {padding: [50, 50]});
+                            let iconHtml = `<div class="bg-brand-600 text-white w-8 h-8 flex items-center justify-center rounded-full shadow-lg border-2 border-white"><i class="fa-solid fa-house text-sm"></i></div>`;
+                            if (apts.length > 1) {
+                                iconHtml = `
+                                <div class="relative bg-brand-700 text-white w-10 h-10 flex items-center justify-center rounded-full shadow-lg border-2 border-white">
+                                    <i class="fa-solid fa-building text-base"></i>
+                                    <div class="absolute -top-2 -right-2 bg-amber-500 text-white text-[11px] font-bold w-5 h-5 flex items-center justify-center rounded-full border border-white shadow-sm">${apts.length}</div>
+                                </div>`;
+                            }
+
+                            const icon = L.divIcon({
+                                className: 'custom-div-icon',
+                                html: iconHtml,
+                                iconSize: [apts.length > 1 ? 40 : 32, apts.length > 1 ? 40 : 32],
+                                iconAnchor: [apts.length > 1 ? 20 : 16, apts.length > 1 ? 40 : 32],
+                                popupAnchor: [0, apts.length > 1 ? -40 : -32]
+                            });
+
+                            const marker = L.marker([lat, lng], {icon: icon}).addTo(this.state.mapInstance);
+                            
+                            // Em vez de interceptar o click, deixamos o Leaflet cuidar do popup (resolve o bug do 'X')
+                            const popupWrapper = `<div id="${clusterId}" class="w-full">${this.generateClusterInnerHTML(clusterId, 0)}</div>`;
+                            marker.bindPopup(popupWrapper, { className: 'custom-leaflet-popup' });
+
+                            bounds.push([lat, lng]);
+                        }
+
+                        if (bounds.length > 0) {
+                            this.state.mapInstance.fitBounds(bounds, {padding: [50, 50]});
+                        }
                     }
                 }, 100);
             },
+
+            // --- FUNÇÕES DO CARROSSEL DO MAPA ---
+            generateClusterInnerHTML(clusterId, idx) {
+                const apts = this.state.clusters[clusterId];
+                if (!apts || !apts[idx]) return '';
+                const apt = apts[idx];
+                const avgRating = ((parseInt(apt.ratingPrice||3) + parseInt(apt.ratingLocation||3) + parseInt(apt.ratingDeco||3))/3).toFixed(1);
+
+                return `
+                    <div class="w-full relative bg-white">
+                        <div class="h-32 w-full relative">
+                            <img src="${apt.photo || 'https://via.placeholder.com/400x300'}" class="w-full h-full object-cover rounded-t-xl cursor-pointer" onclick="app.viewApt('${apt.id}')">
+                            <div class="absolute bottom-2 left-2 bg-brand-600 text-white px-2 py-1 rounded text-xs font-bold shadow">${this.formatCurrency(apt.price)}</div>
+                            <div class="absolute bottom-2 right-2 bg-white/90 text-slate-800 px-2 py-1 rounded text-[10px] font-bold shadow"><i class="fa-solid fa-star text-amber-500"></i> ${avgRating}</div>
+                        </div>
+                        
+                        <div class="p-3">
+                            <h4 class="font-bold text-sm text-slate-800 leading-tight mb-1 truncate cursor-pointer hover:text-brand-600 transition" onclick="app.viewApt('${apt.id}')" title="${apt.title}">${apt.title}</h4>
+                            <p class="text-[11px] text-slate-500 mb-3"><i class="fa-solid fa-bed"></i> ${apt.bedrooms} quartos | <i class="fa-solid fa-ruler"></i> ${apt.area}m²</p>
+                            
+                            <div class="flex gap-2 mb-2">
+                                <button onclick="app.viewApt('${apt.id}')" class="flex-1 bg-brand-50 active:bg-brand-100 text-brand-700 text-xs font-bold py-2 rounded-lg transition border border-brand-100">Detalhes</button>
+                                <button onclick="app.startDraggingApt('${apt.id}')" class="w-10 bg-slate-50 active:bg-slate-100 text-slate-600 flex items-center justify-center rounded-lg border border-slate-200" title="Ajustar Pino"><i class="fa-solid fa-up-down-left-right"></i></button>
+                            </div>
+                            
+                            ${apts.length > 1 ? `
+                            <div class="flex items-center justify-between border-t border-slate-100 pt-2 mt-1">
+                                <!-- event.stopPropagation() adicionado aqui previne o bug do card sumir -->
+                                <button onclick="event.stopPropagation(); app.changeClusterPage('${clusterId}', ${idx - 1})" class="w-6 h-6 rounded-full bg-slate-100 active:bg-slate-200 flex items-center justify-center text-slate-600"><i class="fa-solid fa-chevron-left text-[10px]"></i></button>
+                                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">${idx + 1} de ${apts.length}</span>
+                                <button onclick="event.stopPropagation(); app.changeClusterPage('${clusterId}', ${idx + 1})" class="w-6 h-6 rounded-full bg-slate-100 active:bg-slate-200 flex items-center justify-center text-slate-600"><i class="fa-solid fa-chevron-right text-[10px]"></i></button>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            },
+
+            changeClusterPage(clusterId, newIdx) {
+                const apts = this.state.clusters[clusterId];
+                if (!apts) return;
+                
+                if (newIdx < 0) newIdx = apts.length - 1;
+                if (newIdx >= apts.length) newIdx = 0;
+                
+                const container = document.getElementById(clusterId);
+                if (container) {
+                    // Substitui apenas o miolo do HTML, sem quebrar o popup do Leaflet
+                    container.innerHTML = this.generateClusterInnerHTML(clusterId, newIdx);
+                }
+            },
+
+            // --- LÓGICA DE DRAG & DROP DO PINO ---
+            startDraggingApt(id) {
+                this.closeModal(); // Caso chame do modal
+                this.state.draggingAptId = id;
+                this.navigate('map'); 
+            },
+
+            cancelDragging() {
+                this.state.draggingAptId = null;
+                this.state.tempDragLatLng = null;
+                this.navigate('map'); // Redesenha normal
+            },
+
+            async saveDraggedApt() {
+                if(!this.state.tempDragLatLng) { this.cancelDragging(); return; }
+                
+                const id = this.state.draggingAptId;
+                const apt = this.state.apartments.find(a => a.id === id);
+                if(!apt) return;
+
+                Swal.fire({ title: 'Atualizando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+                const newLat = this.state.tempDragLatLng.lat;
+                const newLng = this.state.tempDragLatLng.lng;
+
+                apt.lat = newLat;
+                apt.lng = newLng;
+
+                try {
+                    if (supabaseClient) {
+                        await supabaseClient.from('apartments').update({lat: newLat, lng: newLng}).eq('id', id);
+                    }
+                } catch(e) { console.error("Erro Supabase", e); }
+
+                localStorage.setItem('meuAptoIdealData_v2', JSON.stringify(this.state.apartments));
+                
+                Swal.fire({icon: 'success', title: 'Localização Salva!', timer: 1500, showConfirmButton: false});
+                
+                this.state.draggingAptId = null;
+                this.state.tempDragLatLng = null;
+                this.navigate('map');
+            },
+
 
             // --- VIEW: COMPARE ---
             renderCompare(container) {
@@ -1012,7 +1102,7 @@
                                                 <button onclick="app.toggleCompare('${a.id}'); app.renderCompare(document.getElementById('main-content'));" class="absolute -top-2 -right-2 w-8 h-8 md:w-6 md:h-6 bg-red-100 text-red-500 rounded-full flex items-center justify-center md:hover:bg-red-500 active:bg-red-500 active:text-white md:hover:text-white transition shadow-sm" title="Remover">
                                                     <i class="fa-solid fa-xmark text-sm md:text-xs"></i>
                                                 </button>
-                                                <img src="${a.photo || 'https://via.placeholder.com/300x200'}" class="w-full h-32 object-cover rounded-lg mb-3 shadow-sm">
+                                                <img src="${a.photo || 'https://via.placeholder.com/300x200'}" class="w-full h-32 object-cover rounded-lg mb-3 shadow-sm cursor-pointer" onclick="app.viewApt('${a.id}')">
                                                 <h4 class="font-bold text-slate-800 text-sm line-clamp-2">${a.title}</h4>
                                                 <p class="text-xs text-slate-500 mt-1">${a.neighborhood}, ${a.city}</p>
                                             </div>
@@ -1052,7 +1142,6 @@
                                     }).join('')}
                                 </tr>
                                 
-                                <!-- Seção Avaliações Pessoais -->
                                 <tr>
                                     <td colspan="${apts.length + 1}" class="bg-slate-100 p-2 font-bold text-xs text-slate-500 uppercase tracking-wider text-center sticky left-0">Suas Avaliações</td>
                                 </tr>
@@ -1112,14 +1201,12 @@
                 if(apt) {
                     const newFavState = !apt.favorite;
                     
-                    // Atualiza a tela primeiro (Otimista)
                     apt.favorite = newFavState;
                     localStorage.setItem('meuAptoIdealData_v2', JSON.stringify(this.state.apartments));
 
                     if(this.state.view === 'favorites') this.renderList(document.getElementById('main-content'), true);
                     else this.renderList(document.getElementById('main-content'), false);
                     
-                    // Atualiza no banco silenciosamente
                     try {
                         if (supabaseClient) {
                             await supabaseClient.from('apartments').update({ favorite: newFavState }).eq('id', id);
@@ -1179,10 +1266,9 @@
                             console.error("Erro ao excluir no Supabase", err);
                         }
 
-                        // Executa a exclusão localmente de qualquer forma
                         this.state.apartments = this.state.apartments.filter(a => a.id !== id);
                         this.state.compareList = this.state.compareList.filter(c => c !== id);
-                        this.saveData(); // Atualiza fila de comparação local
+                        this.saveData();
                         localStorage.setItem('meuAptoIdealData_v2', JSON.stringify(this.state.apartments));
 
                         this.renderList(document.getElementById('main-content'), this.state.view === 'favorites');
