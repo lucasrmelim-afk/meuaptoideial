@@ -142,8 +142,9 @@
     </footer>
 
     <!-- Modal de Detalhes -->
-    <div id="apt-modal" class="fixed inset-0 bg-slate-900/70 z-[100] hidden items-center justify-center p-4 backdrop-blur-sm transition-opacity" onclick="app.closeModal(event)">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col relative animate-fade-in-up custom-scrollbar" onclick="event.stopPropagation()">
+    <!-- overflow-hidden no wrapper do modal e overflow-y-auto e overflow-x-hidden no container branco evitam rolagem lateral -->
+    <div id="apt-modal" class="fixed inset-0 bg-slate-900/70 z-[100] hidden items-center justify-center p-4 backdrop-blur-sm transition-opacity overflow-hidden" onclick="app.closeModal(event)">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto overflow-x-hidden flex flex-col relative animate-fade-in-up custom-scrollbar" onclick="event.stopPropagation()">
             <!-- Injetado dinamicamente -->
             <div id="modal-content-inject"></div>
         </div>
@@ -171,7 +172,7 @@
                 view: 'list',
                 apartments: [],
                 compareList: [],
-                filters: { maxPrice: '', minArea: '', city: '', neighborhood: '', bedrooms: '', searchTitle: '' },
+                filters: { searchTitle: '', neighborhood: '', building: '' },
                 sortBy: 'dateDesc',
                 editingId: null,
                 mapInstance: null
@@ -295,8 +296,8 @@
 
             // --- VIEW: LIST / FAVORITES ---
             renderList(container, onlyFavorites = false) {
-                const uniqueCities = [...new Set(this.state.apartments.map(a => a.city))].filter(Boolean).sort();
                 const uniqueNeighborhoods = [...new Set(this.state.apartments.map(a => a.neighborhood))].filter(Boolean).sort();
+                const uniqueBuildings = [...new Set(this.state.apartments.map(a => a.building))].filter(Boolean).sort();
 
                 let html = `
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
@@ -330,35 +331,27 @@
                             <!-- Filter Content -->
                             <div id="filter-content" class="hidden lg:block p-5 pt-0 lg:pt-5 transition-all">
                                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4 mt-4 lg:mt-0">
-                                    <div>
-                                        <label class="block text-sm font-medium text-slate-700 mb-1">Buscar por Título</label>
+                                    <div class="sm:col-span-2 lg:col-span-1">
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Buscar por nome</label>
                                         <div class="relative">
                                             <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                                                 <i class="fa-solid fa-search text-slate-400"></i>
                                             </div>
-                                            <input type="text" id="filter-title" value="${this.state.filters.searchTitle || ''}" placeholder="Ex: Varanda" class="pl-10 w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2 outline-none transition">
+                                            <input type="text" id="filter-title" value="${this.state.filters.searchTitle || ''}" placeholder="Palavra chave..." class="pl-10 w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2 outline-none transition">
                                         </div>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-slate-700 mb-1">Preço Máximo</label>
-                                        <input type="number" id="filter-maxPrice" value="${this.state.filters.maxPrice}" placeholder="Ex: 500000" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2 outline-none transition">
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-slate-700 mb-1">Quartos (Mínimo)</label>
-                                        <input type="number" id="filter-bedrooms" value="${this.state.filters.bedrooms}" placeholder="Ex: 2" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2 outline-none transition">
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-slate-700 mb-1">Cidade</label>
-                                        <select id="filter-city" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2 outline-none transition cursor-pointer">
-                                            <option value="">Todas as Cidades</option>
-                                            ${uniqueCities.map(c => `<option value="${c}" ${this.state.filters.city === c ? 'selected' : ''}>${c}</option>`).join('')}
-                                        </select>
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-slate-700 mb-1">Bairro</label>
                                         <select id="filter-neighborhood" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2 outline-none transition cursor-pointer">
                                             <option value="">Todos os Bairros</option>
                                             ${uniqueNeighborhoods.map(n => `<option value="${n}" ${this.state.filters.neighborhood === n ? 'selected' : ''}>${n}</option>`).join('')}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-slate-700 mb-1">Nome do Edifício</label>
+                                        <select id="filter-building" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block p-3 md:p-2 outline-none transition cursor-pointer">
+                                            <option value="">Todos os Edifícios</option>
+                                            ${uniqueBuildings.map(b => `<option value="${b}" ${this.state.filters.building === b ? 'selected' : ''}>${b}</option>`).join('')}
                                         </select>
                                     </div>
                                     <div class="sm:col-span-2 lg:col-span-1 pt-2 space-y-2 lg:space-y-0 lg:flex lg:flex-col gap-2">
@@ -391,12 +384,10 @@
                 if (onlyFavorites) {
                     filtered = filtered.filter(a => a.favorite);
                 } else {
-                    const { maxPrice, bedrooms, city, neighborhood, searchTitle } = this.state.filters;
+                    const { searchTitle, neighborhood, building } = this.state.filters;
                     if (searchTitle) filtered = filtered.filter(a => a.title.toLowerCase().includes(searchTitle.toLowerCase()));
-                    if (maxPrice) filtered = filtered.filter(a => a.price <= parseFloat(maxPrice));
-                    if (bedrooms) filtered = filtered.filter(a => a.bedrooms >= parseInt(bedrooms));
-                    if (city) filtered = filtered.filter(a => a.city === city);
                     if (neighborhood) filtered = filtered.filter(a => a.neighborhood === neighborhood);
+                    if (building) filtered = filtered.filter(a => a.building === building);
                 }
 
                 filtered.sort((a, b) => {
@@ -534,11 +525,11 @@
                         <button onclick="app.closeModal(event)" class="absolute top-4 right-4 bg-white/90 backdrop-blur w-10 h-10 rounded-full flex items-center justify-center text-slate-800 hover:bg-white shadow-lg transition z-10">
                             <i class="fa-solid fa-xmark text-xl"></i>
                         </button>
-                        <div class="absolute bottom-4 left-4 flex flex-col md:flex-row gap-2 items-start md:items-end w-full pr-8">
-                            <div class="bg-brand-600 text-white px-4 py-2 rounded-lg font-bold shadow-lg text-lg border border-white/20">
+                        <div class="absolute bottom-4 left-4 right-4 flex flex-col md:flex-row gap-2 items-start md:items-end pointer-events-none">
+                            <div class="bg-brand-600 text-white px-4 py-2 rounded-lg font-bold shadow-lg text-lg border border-white/20 pointer-events-auto max-w-full overflow-hidden text-ellipsis whitespace-nowrap">
                                 ${this.formatCurrency(apt.price)}
                             </div>
-                            <div class="bg-white/95 backdrop-blur text-slate-800 px-3 py-1.5 md:py-2 rounded-lg font-bold shadow-lg text-sm border border-slate-200">
+                            <div class="bg-white/95 backdrop-blur text-slate-800 px-3 py-1.5 md:py-2 rounded-lg font-bold shadow-lg text-sm border border-slate-200 pointer-events-auto whitespace-nowrap">
                                 ${this.formatCurrency(apt.priceM2).replace(',00', '')}/m²
                             </div>
                         </div>
@@ -1183,10 +1174,8 @@
             applyFilters() {
                 this.state.filters = {
                     searchTitle: document.getElementById('filter-title').value,
-                    maxPrice: document.getElementById('filter-maxPrice').value,
-                    bedrooms: document.getElementById('filter-bedrooms').value,
-                    city: document.getElementById('filter-city').value,
                     neighborhood: document.getElementById('filter-neighborhood').value,
+                    building: document.getElementById('filter-building').value,
                 };
                 this.renderList(document.getElementById('main-content'), false);
                 // Fecha filtro mobile após aplicar
@@ -1197,12 +1186,10 @@
             },
 
             clearFilters() {
-                this.state.filters = { maxPrice: '', bedrooms: '', city: '', neighborhood: '', searchTitle: '' };
+                this.state.filters = { searchTitle: '', neighborhood: '', building: '' };
                 document.getElementById('filter-title').value = '';
-                document.getElementById('filter-maxPrice').value = '';
-                document.getElementById('filter-bedrooms').value = '';
-                document.getElementById('filter-city').value = '';
                 document.getElementById('filter-neighborhood').value = '';
+                document.getElementById('filter-building').value = '';
                 this.renderList(document.getElementById('main-content'), false);
             },
 
